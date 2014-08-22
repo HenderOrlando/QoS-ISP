@@ -1,0 +1,15 @@
+qo_s_estadisticas:
+    resource: "@QoSEstadisticasBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+qo_s_mediciones:
+    resource: "@QoSMedicionesBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+qo_s_admin:
+    resource: "@QoSAdminBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
