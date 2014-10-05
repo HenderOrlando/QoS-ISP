@@ -1,0 +1,42 @@
+{{ form_start(form) }}
+    <ul class="nav nav-sidebar">
+        <li class="border-t border-b title">
+            <h3>
+                Agregar Institución
+            </h3>
+        </li>
+        <li>
+            <div class="form-group">
+                {{ form_row(form.nombre) }}
+            </div>
+        </li>
+        <li>
+            <div class="form-group">
+                {{ form_row(form.abreviacion) }}
+            </div>
+        </li>
+        <li>
+            <div class="form-group">
+                {{ form_row(form.telefono) }}
+            </div>
+        </li>
+        <li>
+            <div class="form-group">
+                {{ form_row(form.direccion) }}
+            </div>
+        </li>
+        <li>
+            <div class="form-group">
+                {{ form_row(form.proveedores) }}
+            </div>
+        </li>
+    </ul>
+    <ul class="nav nav-sidebar">
+        <li class="border-t border-b title text-center">
+            {{- form_row(form.submit,{ 'attr': {'class': 'btn btn-lg btn-primary btn-block border-radius-none'} }) -}}
+        </li>
+    </ul>
+    <div class="hide">
+        {{- form_rest(form) -}}
+    </div>
+{{ form_end(form) }}

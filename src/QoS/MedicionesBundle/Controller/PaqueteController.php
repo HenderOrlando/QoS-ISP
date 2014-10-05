@@ -29,10 +29,43 @@ class PaqueteController extends Controller
     {
         $em = $this->getDoctrine()->getManager();
 
-        $entities = $em->getRepository('QoSMedicionesBundle:Paquete')->findAll();
+        $entities = $this->getRepository()->findAll();
 
+        $datosGrafico = $this->getDatosGrafico();
+        $rowMains = array();
+        foreach($datosGrafico as $name => $dt){
+            $rowMains[] = array(
+                'name'  =>  $name,
+                'table' =>  $this->renderView('QoSAdminBundle:Secured:_table.html.twig', array(
+                    'theads' => array(
+                            array(
+                                'tds' => array(
+                                    array(
+                                        'val' => 'Nombre del Paquete'
+                                    ),
+                                    array(
+                                        'val' => 'Total de Mediciones'
+                                    ),
+                                    array(
+                                        'val' => "Mediciones con el Paquete"
+                                    ),
+                                ),
+                            ),
+                        ),
+                    'tbodys' => $this->getTBodys($name),
+                    )
+                )
+            );
+        }
+        
+        $entity = new Paquete();
+        $form   = $this->createCreateForm($entity, $this->getUser());
+        
         return array(
-            'entities' => $entities,
+//            'entities'  =>  $entities,
+            'form'          => $form->createView(),
+            'rowMains'      => $rowMains,
+            'datosGrafico'  => $datosGrafico,
         );
     }
     /**
@@ -45,7 +78,7 @@ class PaqueteController extends Controller
     public function createAction(Request $request)
     {
         $entity = new Paquete();
-        $form = $this->createCreateForm($entity);
+        $form = $this->createCreateForm($entity, $this->getUser());
         $form->handleRequest($request);
 
         if ($form->isValid()) {
@@ -69,14 +102,14 @@ class PaqueteController extends Controller
      *
      * @return \Symfony\Component\Form\Form The form
      */
-    private function createCreateForm(Paquete $entity)
+    private function createCreateForm(Paquete $entity, $user)
     {
-        $form = $this->createForm(new PaqueteType(), $entity, array(
+        $form = $this->createForm(new PaqueteType($user), $entity, array(
             'action' => $this->generateUrl('Paquete_create'),
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Create'));
+        $form->add('submit', 'submit', array('label' => 'Crear'));
 
         return $form;
     }
@@ -91,7 +124,7 @@ class PaqueteController extends Controller
     public function newAction()
     {
         $entity = new Paquete();
-        $form   = $this->createCreateForm($entity);
+        $form   = $this->createCreateForm($entity, $this->getUser());
 
         return array(
             'entity' => $entity,
@@ -109,18 +142,27 @@ class PaqueteController extends Controller
     public function showAction($id)
     {
         $em = $this->getDoctrine()->getManager();
+        $user = $this->getUser();
+        $context = $this->get('security.context');
 
-        $entity = $em->getRepository('QoSMedicionesBundle:Paquete')->find($id);
+        $entity = $this->getRepository()->find($id);
 
         if (!$entity) {
-            throw $this->createNotFoundException('Unable to find Paquete entity.');
+            throw $this->createNotFoundException("Paquete \"$id\" no encontrado.");
         }
 
-        $deleteForm = $this->createDeleteForm($id);
+        $id = $entity->getId();
+        $deleteForm = null;
+        $editForm = null;
+        if($context && $context->isGranted('ROLE_SUPER_ADMIN') || $user->getId() === $entity->getId()){
+            $editForm = $this->createEditForm($entity, $user);
+            $deleteForm = $this->createDeleteForm($id, $user);
+        }
 
         return array(
-            'entity'      => $entity,
-            'delete_form' => $deleteForm->createView(),
+            'entity'        =>  $entity,
+            'delete_form'   =>  $deleteForm->createView(),
+            'form'          =>  $editForm->createView(),
         );
     }
 
@@ -141,8 +183,8 @@ class PaqueteController extends Controller
             throw $this->createNotFoundException('Unable to find Paquete entity.');
         }
 
-        $editForm = $this->createEditForm($entity);
-        $deleteForm = $this->createDeleteForm($id);
+        $editForm = $this->createEditForm($entity, $this->getUser());
+        $deleteForm = $this->createDeleteForm($id, $this->getUser());
 
         return array(
             'entity'      => $entity,
@@ -158,14 +200,14 @@ class PaqueteController extends Controller
     *
     * @return \Symfony\Component\Form\Form The form
     */
-    private function createEditForm(Paquete $entity)
+    private function createEditForm(Paquete $entity, $user)
     {
         $form = $this->createForm(new PaqueteType(), $entity, array(
             'action' => $this->generateUrl('Paquete_update', array('id' => $entity->getId())),
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Update'));
+        $form->add('submit', 'submit', array('label' => 'Actualizar'));
 
         return $form;
     }
@@ -186,8 +228,8 @@ class PaqueteController extends Controller
             throw $this->createNotFoundException('Unable to find Paquete entity.');
         }
 
-        $deleteForm = $this->createDeleteForm($id);
-        $editForm = $this->createEditForm($entity);
+        $deleteForm = $this->createDeleteForm($id, $this->getUser());
+        $editForm = $this->createEditForm($entity, $this->getUser());
         $editForm->handleRequest($request);
 
         if ($editForm->isValid()) {
@@ -240,8 +282,71 @@ class PaqueteController extends Controller
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('Paquete_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => 'Delete'))
+            ->add('submit', 'submit', array(
+                'attr'  => array(
+                    'class' => 'btn btn-lg btn-danger btn-block border-radius-none',
+                ),
+                'label' => 'Borrar'
+            ))
             ->getForm()
         ;
+    }
+    /**
+     * getRepository
+     * 
+     * @return QoS\MedicionesBundle\Entity\Paquete
+     */
+    private function getRepository(){
+        return $this->getDoctrine()->getManager()->getRepository('QoSMedicionesBundle:Paquete');
+    }
+    
+    public function getDatosGrafico($datos = null) {
+        $em = $this->getDoctrine()->getManager();
+        
+        $paquetes = $this->getRepository()->findAll();
+        if(is_null($datos)){
+            $datos = array();
+        }
+        $datos['Uso-de-paquetes'] = array();
+        foreach($paquetes as $paquete){
+            $datos['Uso-de-paquetes']['name'] = 'Uso-de-paquetes';
+            $datos['Uso-de-paquetes']['values'][] = array(
+                'label' => $paquete->getNombre(),
+                'value' => $paquete->getConfiguracion()->count(),
+            );
+            
+        }
+        return $datos;
+    }
+    
+    public function getTBodys($name) {
+        $em = $this->getDoctrine()->getManager();
+        
+        $tbodys = array();
+        switch($name){
+            case 'Uso-de-paquetes':
+                foreach($this->getRepository()->findAll() as $paquete){
+                    $mediciones = '';
+                    foreach($paquete->getConfiguracion() as $medicion){
+                        $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicion->getId()), true);
+                        $nombre = $medicion->getNombre();
+                        $mediciones = "<a href=\"$url\">$nombre</a>;";
+                    }
+                    $tbodys[]['tds'] = array(
+                        array(
+                            'val' => '<a href="'.$this->generateUrl('Paquete_show', array('id' => $paquete->getId())).'">'.$paquete->getNombre().'</a>'
+                        ),
+                        array(
+                            'val' => $paquete->getConfiguracion()->count()
+                        ),
+                        array(
+                            'val' => $mediciones
+                        ),
+                    );
+
+                }
+                break;
+        }
+        return $tbodys;
     }
 }

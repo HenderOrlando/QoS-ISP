@@ -1,60 +1,107 @@
-{% extends '::base.html.twig' %}
+{% extends 'QoSAdminBundle:Secured:index.html.twig' %}
 
-{% block body -%}
-    <h1>Usuario</h1>
-
-    <table class="record_properties">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ entity.id }}</td>
-            </tr>
-            <tr>
-                <th>Docid</th>
-                <td>{{ entity.docId }}</td>
-            </tr>
-            <tr>
-                <th>Clave</th>
-                <td>{{ entity.clave }}</td>
-            </tr>
-            <tr>
-                <th>Salt</th>
-                <td>{{ entity.salt }}</td>
-            </tr>
-            <tr>
-                <th>Fechacreado</th>
-                <td>{{ entity.fechaCreado|date('Y-m-d H:i:s') }}</td>
-            </tr>
-            <tr>
-                <th>Discr</th>
-                <td>{{ entity.discr }}</td>
-            </tr>
-            <tr>
-                <th>Email</th>
-                <td>{{ entity.email }}</td>
-            </tr>
-            <tr>
-                <th>Token</th>
-                <td>{{ entity.token }}</td>
-            </tr>
-            <tr>
-                <th>Tokenexpire</th>
-                <td>{{ entity.tokenExpire|date('Y-m-d H:i:s') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-        <ul class="record_actions">
-    <li>
-        <a href="{{ path('Usuario') }}">
-            Back to the list
-        </a>
-    </li>
-    <li>
-        <a href="{{ path('Usuario_edit', { 'id': entity.id }) }}">
-            Edit
-        </a>
-    </li>
-    <li>{{ form(delete_form) }}</li>
-</ul>
-{% endblock %}
+{% block rowSideBar -%}
+    {% if entity is defined and entity is not null %}
+        {% if form is defined %}
+            {{ form_start(form) }}
+                <ul class="nav nav-sidebar nav-20">
+                    <li class="border-t border-b title">
+                        <h3>
+                            Usuario {{entity.username}}
+                        </h3>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.docId) }}
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.username) }}
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.email) }}
+                        </div>
+                    </li>
+                    {% if form.clave is defined %}
+                        <li>
+                            <div class="form-group">
+                                {{ form_row(form.clave) }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    {% if form.rol is defined %}
+                        <li>
+                            <div class="form-group">
+                                {{ form_row(form.rol) }}
+                            </div>
+                        </li>
+                    {% endif %}
+                    <li class="border-t border-b title text-center">
+                        {{- form_row(form.submit,{ 'attr': {'class': 'btn btn-lg btn-primary btn-block border-radius-none'} }) -}}
+                    </li>
+                </ul>
+                <div class="hide">
+                    {{- form_rest(form) -}}
+                </div>
+            {{ form_end(form) }}
+                <ul class="nav nav-sidebar">
+                    <li class="border-t border-b title text-center">
+                        <a href="{{ path('Usuario') }}" class="btn btn-lg btn-default btn-block border-radius-none">
+                            Volver a lista de Usuarios
+                        </a>
+                    </li>
+                </ul>
+                {% if delete_form is defined and delete_form is not null %}
+                    <ul class="nav nav-sidebar">
+                        <li class="border-t border-b title text-center">
+                            {{ form(delete_form) }}
+                        </li>
+                    </ul>
+                {% endif %}
+        {% else %}
+            <ul class="nav nav-sidebar">
+                <li class="border-t border-b title">
+                    <h3>
+                        {{- entity.rol -}}
+                    </h3>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Nombre de Usuario: {{- entity.username -}}
+                    </div>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Documento de Id:{{- entity.docid -}}
+                    </div>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Email: {{- entity.email -}}
+                    </div>
+                </li>
+                <li class="border-t border-b title text-center">
+                    <a href="{{ path('Usuario') }}" class="btn btn-lg btn-default btn-block border-radius-none">
+                        Volver a lista de Usuarios
+                    </a>
+                </li>
+                <li class="border-t border-b title text-center">
+                    {% if delete_form is defined and delete_form is not null %}
+                            {{ form(delete_form) }}
+                    {% endif %}
+                </li>
+            </ul>
+        {% endif %}
+    {% else %}
+        <div class="label label-warning label-lg">
+            El Usuario no es válido.
+        </div>
+    {% endif %}
+{% endblock rowSideBar %}
+    
+{#% block rowMain %}
+    
+{% endblock rowMain %#}

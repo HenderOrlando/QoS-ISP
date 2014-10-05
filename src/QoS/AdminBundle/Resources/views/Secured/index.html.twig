@@ -1,0 +1,131 @@
+{% extends '::base.html.twig' %}
+    
+{% block body %}
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Menu</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            {% set urlRole = 'name' %}
+            {% if is_granted('ROLE_SUPER_ADMIN') %}
+                {% set urlRole = 'super_admin' %}
+            {% elseif is_granted('ROLE_ADMIN') %}
+                {% set urlRole = 'admin' %}
+            {% endif %}
+            <a class="navbar-brand" href="{{- path('index_' ~ urlRole, {name: app.user.username}) -}}">QoS - ISP</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Usuario') }}">Usuarios</a></li>
+                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Paquete') }}">Paquetes</a></li>
+                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Proveedor') }}">Proveedores</a></li>
+                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Institucion') }}">Instituciones</a></li>
+                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('index_' ~ urlRole, {name: app.user.username}) }}">Mediciones</a></li>
+                <li>
+                    <div class="dropdown">
+                        <a class="btn-bg btn btn-link btn-block" data-toggle="dropdown" href="#">{{ app.user.username }}</a>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                            <li><a href="{{ path('cuenta', {username: app.user.username}) }}">Cuenta</a></li>
+                            <li><a href="{{ path('logout') }}">Logout</a></li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+            {{- render(url('find', {'name': app.user.username})) -}}
+        </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            {% block rowContainer %}
+                <div class="col-xs-4 col-sm-4 col-md-3 sidebar" data-spy="affix" data-offset-top="60" data-offset-bottom="20">
+                    {% block rowSideBar %}
+                        {{- render(url('medicioninstitucion_new_sidebar')) -}}
+                    {% endblock rowSideBar %}
+                </div>
+                <div class="col-xs-8 col-sm-8 col-xs-offset-4 col-sm-offset-4 col-md-9 col-md-offset-3 main">
+                    {% block rowMain %}
+                        {{- include ('QoSAdminBundle:Secured:_rowMain.html.twig',{
+                            rowMain: {
+                                'name': 'resultados',
+                            }
+                        }) -}}
+                    {% endblock rowMain %}
+                </div>
+            {% endblock rowContainer %}
+        </div>
+    </div>
+<div>
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    {#<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>#}
+                    <h4 class="modal-title" id="modal-title">Midiendo</h4>
+                </div>
+                <div class="modal-body" id="modal-body">
+                  
+                </div>
+                <div class="modal-footer" id="modal-footer">
+                    <button type="button" class="btn btn-warning stop-medicion">Terminar</button>
+                    <button type="button" class="btn btn-danger modal-closed">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block title %}- {{ app.user.username }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('bundles/qosadmin/css/dashboard.css') }}" />
+{% endblock stylesheets %}
+    
+{% block javascripts %}
+    {{ parent() }}
+    {% block dataGrafico %}
+        <script type="text/javascript">
+            var dataGraf = [];
+            {% if rowMain.datosGrafico is defined %}
+                {% for dg in rowMain.datosGrafico %}
+                    dataGraf['{{-rowMain.name-}}'] = JSON.parse('{' +
+                        'value:{{-dg.value-}},' +
+                        'color:'+getColor("{{-loop.index-}}", true)+',' +
+                        'highlight:'+getColor("{{-loop.index-}}") + ',' +
+                        'label:"{{-dg.label-}}"' +
+                    '}');
+                {% endfor %}
+            {% else %}
+                dataGraf['resultados'] = [
+                    {
+                        value: 300,
+                        color:getColor(0, true),
+                        highlight: getColor(0),
+                        label: "Red Oto"
+                    },
+                    {
+                        value: 50,
+                        color:getColor(1, true),
+                        highlight: getColor(1),
+                        label: "Green A"
+                    },
+                    {
+                        value: 100,
+                        color:getColor(2, true),
+                        highlight: getColor(2),
+                        label: "Yellow B"
+                    }
+                ];
+            {% endif %}
+        </script>
+    {% endblock dataGrafico %}
+    <script type="text/javascript" src="{{ asset('bundles/qosadmin/js/dashboard.js') }}"></script>
+    
+{% endblock javascripts %}

@@ -1,53 +1,41 @@
-{% extends '::base.html.twig' %}
+{% extends 'QoSAdminBundle:Secured:index.html.twig' %}
 
-{% block body -%}
-    <h1>Proveedor list</h1>
+{% block title %}- Proveedores {% endblock %}
 
-    <table class="records_list">
-        <thead>
-            <tr>
-                <th>Holgura</th>
-                <th>Unidadholgura</th>
-                <th>Direccion</th>
-                <th>Telefono</th>
-                <th>Id</th>
-                <th>Nombre</th>
-                <th>Canonical</th>
-                <th>Fechacreado</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for entity in entities %}
-            <tr>
-                <td><a href="{{ path('Proveedor_show', { 'id': entity.id }) }}">{{ entity.holgura }}</a></td>
-                <td>{{ entity.unidadHolgura }}</td>
-                <td>{{ entity.direccion }}</td>
-                <td>{{ entity.telefono }}</td>
-                <td>{{ entity.id }}</td>
-                <td>{{ entity.nombre }}</td>
-                <td>{{ entity.canonical }}</td>
-                <td>{% if entity.fechaCreado %}{{ entity.fechaCreado|date('Y-m-d H:i:s') }}{% endif %}</td>
-                <td>
-                <ul>
-                    <li>
-                        <a href="{{ path('Proveedor_show', { 'id': entity.id }) }}">show</a>
-                    </li>
-                    <li>
-                        <a href="{{ path('Proveedor_edit', { 'id': entity.id }) }}">edit</a>
-                    </li>
-                </ul>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+{% block rowMain %}
+    {#% set tablaProveedores %}
+        {% include 'QoSAdminBundle:Proveedor:_index.html.twig' with {entities: entities} %}
+    {% endset %#}
 
-        <ul>
-        <li>
-            <a href="{{ path('Proveedor_new') }}">
-                Create a new entry
-            </a>
-        </li>
-    </ul>
-    {% endblock %}
+    {% for rm in rowMains %}
+        {{- include ('QoSAdminBundle:Secured:_rowMain.html.twig',{
+            rowMain: rm
+        }) -}}
+    {% endfor %}
+{% endblock rowMain %}
+{% block rowSideBar %}
+    {% include 'QoSAdminBundle:Proveedor:newSidebar.html.twig' with {
+        form: form,
+    } %}
+{% endblock rowSideBar %}
+
+{% block dataGrafico %}
+    <script type="text/javascript">
+        var dataGraf = [];
+        {% if datosGrafico is defined and datosGrafico is not empty %}
+            {% for dg in datosGrafico if dg.name is defined %}
+                dataGraf['{{-dg.name-}}'] = [];
+                {% for i, val in dg.values %}
+                    dataGraf['{{-dg.name-}}']["{{-i-}}"] = JSON.parse('{' +
+                        '"value":{{-val.value-}},' +
+                        '"color":"'+getColor("{{-i-}}", true)+'",' +
+                        '"highlight":"'+getColor("{{-i-}}") + '",' +
+                        '"label":"{{-val.label-}}"' +
+                    '}');
+                {% else %}
+                    console.log('sin datos');
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+    </script>
+{% endblock dataGrafico %}

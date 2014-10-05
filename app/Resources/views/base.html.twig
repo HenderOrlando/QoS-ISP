@@ -2,12 +2,34 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}{% endblock %}
+        <title>QoS - ISP {% block title %}{% endblock %}</title>
+        {% block stylesheets %}
+            {% stylesheets 
+                'bundles/qosadmin/css/bootstrap.min.css'
+                'bundles/qosadmin/css/bootstrap-theme.min.css'
+                'bundles/qosadmin/css/bootstrap-responsive.css'
+                output='css/compiled/main.css'
+             %}
+                <link rel="stylesheet" href="{{ asset_url }}" />
+            {% endstylesheets %}
+        {% endblock %}
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
     </head>
     <body>
         {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
+        {% block javascripts %}
+            {% javascripts 
+                '@QoSAdminBundle/Resources/public/js/jquery-2.1.1.min.js' 
+                '@QoSAdminBundle/Resources/public/js/bootstrap.min.js' 
+                '@QoSAdminBundle/Resources/public/js/bootstrap3-typeahead.js' 
+                '@QoSAdminBundle/Resources/public/js/Chart.min.js' 
+                '@QoSAdminBundle/Resources/public/js/definicions.js' 
+                output='js/compiled/main.js'
+            %}
+                <script type="text/javascript" src="{{ asset_url }}"></script>
+            {% endjavascripts %}
+        {% endblock %}
+        {% block javascriptsExtra %}
+        {% endblock %}
     </body>
 </html>

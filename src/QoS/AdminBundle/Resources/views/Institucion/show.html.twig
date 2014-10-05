@@ -1,52 +1,112 @@
-{% extends '::base.html.twig' %}
+{% extends 'QoSAdminBundle:Secured:index.html.twig' %}
 
-{% block body -%}
-    <h1>Institucion</h1>
-
-    <table class="record_properties">
-        <tbody>
-            <tr>
-                <th>Abreviacion</th>
-                <td>{{ entity.abreviacion }}</td>
-            </tr>
-            <tr>
-                <th>Direccion</th>
-                <td>{{ entity.direccion }}</td>
-            </tr>
-            <tr>
-                <th>Telefono</th>
-                <td>{{ entity.telefono }}</td>
-            </tr>
-            <tr>
-                <th>Id</th>
-                <td>{{ entity.id }}</td>
-            </tr>
-            <tr>
-                <th>Nombre</th>
-                <td>{{ entity.nombre }}</td>
-            </tr>
-            <tr>
-                <th>Canonical</th>
-                <td>{{ entity.canonical }}</td>
-            </tr>
-            <tr>
-                <th>Fechacreado</th>
-                <td>{{ entity.fechaCreado|date('Y-m-d H:i:s') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-        <ul class="record_actions">
-    <li>
-        <a href="{{ path('Institucion') }}">
-            Back to the list
-        </a>
-    </li>
-    <li>
-        <a href="{{ path('Institucion_edit', { 'id': entity.id }) }}">
-            Edit
-        </a>
-    </li>
-    <li>{{ form(delete_form) }}</li>
-</ul>
-{% endblock %}
+{% block rowSideBar -%}
+    {% if entity is defined and entity is not null %}
+        {% if form is defined %}
+            {{ form_start(form) }}
+                <ul class="nav nav-sidebar nav-20">
+                    <li class="border-t border-b title">
+                        <h3>
+                            Institucion "{{entity.nombre}}"
+                        </h3>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.nombre) }}
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.abreviacion) }}
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.telefono) }}
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.direccion) }}
+                        </div>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.proveedores) }}
+                        </div>
+                    </li>
+                </ul>
+                <ul class="nav nav-sidebar">
+                    <li class="border-t border-b title text-center">
+                        {{- form_row(form.submit,{ 'attr': {'class': 'btn btn-lg btn-primary btn-block border-radius-none'} }) -}}
+                    </li>
+                </ul>
+                <div class="hide">
+                    {{- form_rest(form) -}}
+                </div>
+            {{ form_end(form) }}
+                <ul class="nav nav-sidebar">
+                    <li class="border-t border-b title text-center">
+                        {% if delete_form is defined and delete_form is not null %}
+                                {{ form(delete_form) }}
+                        {% endif %}
+                    </li>
+                </ul>
+                <ul class="nav nav-sidebar">
+                    <li class="border-t border-b title text-center">
+                        <a href="{{ path('medicioninstitucion_new',{institucion: entity.id}) }}" class="btn btn-lg btn-info border-radius-none btn-block">
+                            Agregar Medición a {{entity.abreviacion-}}
+                        </a>
+                        <a href="{{ path('Institucion') }}" class="btn btn-lg btn-default border-radius-none btn-block">
+                            Volver a lista de Instituciones
+                        </a>
+                    </li>
+                </ul>
+        {% else %}
+            <ul class="nav nav-sidebar">
+                <li class="border-t border-b title">
+                    <h3>
+                        {{- entity.nombre -}}
+                    </h3>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Teléfono: {{- entity.telefono -}}
+                    </div>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Dirección: {{- entity.direccion -}}
+                    </div>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Proveedores: 
+                        {% for proveedor in entity.proveedores %}
+                            <a href="{{-path('Proveedor_show',{id: proveedor.id})-}}">
+                                {{- proveedor.nombre -}}
+                            </a>
+                            {{- (not loop.last?'; ':'') -}}
+                        {% endfor %}
+                    </div>
+                </li>
+                <li class="border-t border-b title text-center">
+                    <a href="{{ path('Institucion') }}" class="btn btn-lg btn-default btn-block border-radius-none">
+                        Volver a lista de Instituciones
+                    </a>
+                    {% if delete_form is defined and delete_form is not null %}
+                            {{ form(delete_form) }}
+                    {% endif %}
+                </li>
+            </ul>
+        {% endif %}
+    {% else %}
+        <div class="label label-warning label-lg">
+            El Institucion no es válido.
+        </div>
+    {% endif %}
+{% endblock rowSideBar %}
+    
+{#% block rowMain %}
+    
+{% endblock rowMain %#}

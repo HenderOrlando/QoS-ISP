@@ -10,7 +10,7 @@ class Objeto
     /**
      * @ORM\Id
      * @ORM\Column(type="guid")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\GeneratedValue(strategy="UUID")
      */
     protected $id;
 
@@ -38,6 +38,10 @@ class Objeto
     {
         return $this->id;
     }
+    
+    public function __construct() {
+        $this->fechaCreado = new \DateTime();
+    }
 
     /**
      * Set nombre
@@ -48,6 +52,7 @@ class Objeto
     public function setNombre($nombre)
     {
         $this->nombre = $nombre;
+        $this->canonical = $this->normaliza($nombre);
 
         return $this;
     }
@@ -61,19 +66,19 @@ class Objeto
     {
         return $this->nombre;
     }
-
-    /**
-     * Set canonical
-     *
-     * @param string $canonical
-     * @return Objeto
-     */
-    public function setCanonical($canonical)
-    {
-        $this->canonical = $canonical;
-
-        return $this;
-    }
+//
+//    /**
+//     * Set canonical
+//     *
+//     * @param string $canonical
+//     * @return Objeto
+//     */
+//    public function setCanonical($canonical)
+//    {
+//        $this->canonical = $canonical;
+//
+//        return $this;
+//    }
 
     /**
      * Get canonical
@@ -106,5 +111,14 @@ class Objeto
     public function getFechaCreado()
     {
         return $this->fechaCreado;
+    }
+    
+    function normaliza ($cadena){
+        $originales = 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûýýþÿŔŕ';
+        $modificadas = 'aaaaaaaceeeeiiiidnoooooouuuuybsaaaaaaaceeeeiiiidnoooooouuuyybyRr';
+        $cadena = utf8_decode($cadena);
+        $cadena = strtr($cadena, utf8_decode($originales), $modificadas);
+        $cadena = str_replace(' ','-',strtolower($cadena));
+        return utf8_encode($cadena);
     }
 }

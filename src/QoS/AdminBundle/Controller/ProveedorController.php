@@ -31,8 +31,48 @@ class ProveedorController extends Controller
 
         $entities = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
 
+        $datosGrafico = $this->getDatosGrafico();
+        $rowMains = array();
+        foreach($datosGrafico as $name => $dt){
+            $rowMains[] = array(
+                'name'  =>  $name,
+                'table' =>  $this->renderView('QoSAdminBundle:Secured:_table.html.twig', array(
+                    'theads' => array(
+                            array(
+                                'tds' => array(
+                                    array(
+                                        'val' => 'Nombre del Proveedor'
+                                    ),
+                                    array(
+                                        'val' => 'Número total de Mediciones'
+                                    ),
+                                    array(
+                                        'val' => "Mediciones del Proveedor (Medición Esperada) <a href=\""
+                                        .$this->generateUrl('medicionproveedor_new')
+                                        ."\" class=\"label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
+                                    ),
+                                    array(
+                                        'val' => "Mediciones al Proveedor (en Instituciones) <a href=\""
+                                        .$this->generateUrl('medicioninstitucion_new')
+                                        ."\" class=\"label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
+                                    ),
+                                ),
+                            ),
+                        ),
+                    'tbodys' => $this->getTBodys($name),
+                    )
+                )
+            );
+        }
+        
+        $entity = new Proveedor();
+        $form   = $this->createCreateForm($entity, $this->getUser());
+        
         return array(
-            'entities' => $entities,
+//            'entities'  =>  $entities,
+            'form'          => $form->createView(),
+            'rowMains'      => $rowMains,
+            'datosGrafico'  => $datosGrafico,
         );
     }
     /**
@@ -45,7 +85,7 @@ class ProveedorController extends Controller
     public function createAction(Request $request)
     {
         $entity = new Proveedor();
-        $form = $this->createCreateForm($entity);
+        $form = $this->createCreateForm($entity, $this->getUser());
         $form->handleRequest($request);
 
         if ($form->isValid()) {
@@ -69,9 +109,9 @@ class ProveedorController extends Controller
      *
      * @return \Symfony\Component\Form\Form The form
      */
-    private function createCreateForm(Proveedor $entity)
+    private function createCreateForm(Proveedor $entity, $user)
     {
-        $form = $this->createForm(new ProveedorType(), $entity, array(
+        $form = $this->createForm(new ProveedorType($user), $entity, array(
             'action' => $this->generateUrl('Proveedor_create'),
             'method' => 'POST',
         ));
@@ -91,7 +131,7 @@ class ProveedorController extends Controller
     public function newAction()
     {
         $entity = new Proveedor();
-        $form   = $this->createCreateForm($entity);
+        $form   = $this->createCreateForm($entity, $this->getUser());
 
         return array(
             'entity' => $entity,
@@ -109,18 +149,27 @@ class ProveedorController extends Controller
     public function showAction($id)
     {
         $em = $this->getDoctrine()->getManager();
+        $user = $this->getUser();
+        $context = $this->get('security.context');
 
-        $entity = $em->getRepository('QoSAdminBundle:Proveedor')->find($id);
+        $entity = $this->getRepository()->find($id);
 
         if (!$entity) {
-            throw $this->createNotFoundException('Unable to find Proveedor entity.');
+            throw $this->createNotFoundException("Paquete \"$id\" no encontrado.");
         }
 
-        $deleteForm = $this->createDeleteForm($id);
+        $id = $entity->getId();
+        $deleteForm = null;
+        $editForm = null;
+        if($context && $context->isGranted('ROLE_SUPER_ADMIN') || $user->getId() === $entity->getId()){
+            $editForm = $this->createEditForm($entity, $user);
+            $deleteForm = $this->createDeleteForm($id, $user);
+        }
 
         return array(
-            'entity'      => $entity,
-            'delete_form' => $deleteForm->createView(),
+            'entity'        =>  $entity,
+            'delete_form'   =>  $deleteForm->createView(),
+            'form'          =>  $editForm->createView(),
         );
     }
 
@@ -141,8 +190,8 @@ class ProveedorController extends Controller
             throw $this->createNotFoundException('Unable to find Proveedor entity.');
         }
 
-        $editForm = $this->createEditForm($entity);
-        $deleteForm = $this->createDeleteForm($id);
+        $editForm = $this->createEditForm($entity, $this->getUser());
+        $deleteForm = $this->createDeleteForm($id, $this->getUser());
 
         return array(
             'entity'      => $entity,
@@ -158,14 +207,14 @@ class ProveedorController extends Controller
     *
     * @return \Symfony\Component\Form\Form The form
     */
-    private function createEditForm(Proveedor $entity)
+    private function createEditForm(Proveedor $entity, $user)
     {
-        $form = $this->createForm(new ProveedorType(), $entity, array(
+        $form = $this->createForm(new ProveedorType($user), $entity, array(
             'action' => $this->generateUrl('Proveedor_update', array('id' => $entity->getId())),
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Update'));
+        $form->add('submit', 'submit', array('label' => 'Actualizar'));
 
         return $form;
     }
@@ -186,8 +235,8 @@ class ProveedorController extends Controller
             throw $this->createNotFoundException('Unable to find Proveedor entity.');
         }
 
-        $deleteForm = $this->createDeleteForm($id);
-        $editForm = $this->createEditForm($entity);
+        $deleteForm = $this->createDeleteForm($id, $this->getUser());
+        $editForm = $this->createEditForm($entity, $this->getUser());
         $editForm->handleRequest($request);
 
         if ($editForm->isValid()) {
@@ -210,7 +259,7 @@ class ProveedorController extends Controller
      */
     public function deleteAction(Request $request, $id)
     {
-        $form = $this->createDeleteForm($id);
+        $form = $this->createDeleteForm($id, $this->getUser());
         $form->handleRequest($request);
 
         if ($form->isValid()) {
@@ -235,13 +284,92 @@ class ProveedorController extends Controller
      *
      * @return \Symfony\Component\Form\Form The form
      */
-    private function createDeleteForm($id)
+    private function createDeleteForm($id, $user)
     {
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('Proveedor_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => 'Delete'))
+            ->add('submit', 'submit', array(
+                'attr'  => array(
+                    'class' => 'btn btn-lg btn-danger btn-block border-radius-none',
+                ),
+                'label' => 'Borrar'
+            ))
             ->getForm()
         ;
+    }
+    
+    /**
+     * getRepository
+     * 
+     * @return QoS\AdminBundle\Entity\Proveedor
+     */
+    private function getRepository(){
+        return $this->getDoctrine()->getManager()->getRepository('QoSAdminBundle:Proveedor');
+    }
+
+    public function getDatosGrafico($datos = null) {
+        $em = $this->getDoctrine()->getManager();
+        
+        $proveedores = $this->getRepository()->findAll();
+        if(is_null($datos)){
+            $datos = array();
+        }
+        $datos['mediciones-proveedores'] = array();
+        foreach($proveedores as $proveedor){
+            $datos['mediciones-proveedores']['name'] = 'mediciones-proveedores';
+            $datos['mediciones-proveedores']['values'][] = array(
+                'label' => $proveedor->getNombre(),
+                'value' => $proveedor->getMedicionesInstitucion()->count(),
+            );
+            
+        }
+        return $datos;
+    }
+
+    public function getTBodys($name) {
+        $em = $this->getDoctrine()->getManager();
+        
+        $tbodys = array();
+        switch($name){
+            case 'mediciones-proveedores':
+                $proveedores = $this->getRepository()->findAll();
+                foreach($proveedores as $proveedor){
+                    $medicionesProveedor = '';
+                    $medicionesInstitucion = '';
+                    foreach($proveedor->getMedicionesInstitucion() as $medicionInstitucion){
+                        $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
+                        $nombre = $medicionInstitucion->getNombre(true);
+                        $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";
+                    }
+                    foreach($proveedor->getMedicionesProveedor() as $medicionProveedor){
+                        $url = $this->generateUrl('medicionproveedor_show', array('id'=>$medicionProveedor->getId()), true);
+                        $nombre = $medicionProveedor->getNombre(true);
+                        $medicionesProveedor .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";
+                    }
+                    $numMP = $proveedor->getMedicionesProveedor()->count();
+                    $pluralMP = $numMP == 1?'ón':'ones';
+                    $numMI = $proveedor->getMedicionesInstitucion()->count();
+                    $pluralMI = $numMI == 1?'ón':'ones';
+                    $tbodys[]['tds'] = array(
+                        array(
+//                            'val' => $proveedor->getNombre()
+                            'val' => '<a href="'.$this->generateUrl('Proveedor_show', array('id' => $proveedor->getId())).'">'.$proveedor->getNombre().'</a>'
+                        ),
+                        array(
+                            'val' => "$numMI medici$pluralMI en Instituciones <br/> $numMP medici$pluralMP base del servicio del proveedor"
+                        ),
+                        array(
+                            'val' => $medicionesProveedor
+                        ),
+                        array(
+                            'val' => $medicionesInstitucion
+                        ),
+                    );
+
+                }
+                break;
+        }
+        return $tbodys;
     }
 }

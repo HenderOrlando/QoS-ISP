@@ -1,0 +1,41 @@
+{% extends '::base.html.twig' %}
+
+{% block title %}- Login{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('bundles/qosadmin/css/login.css') }}" />
+{% endblock stylesheets %}
+{% block body %}
+
+
+    <div class="container text-center">
+        {#<form action="{{ path('security_check') }}" method="post">
+            <label for="username">Username:</label>                                                                                  
+            <input type="text" id="username" name="_username" value="{{ last_username }}"/>     
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="_password"/>
+
+            <button type="submit">login</button>
+        </form>#}
+        <form action="{{ path("security_check") }}" method="post" id="login" class="form-signin">
+            <div class="text-justify">
+                {% if error %}
+                    <div class="label label-danger">{{ error.message }}</div>
+                {% endif %}
+            </div>
+            <h2 class="form-signin-heading">Software para la Medición del Servicio de Internet</h2>
+            <label for="username" class="sr-only">Username/Email</label>
+            <input type="text" class="input-block-level input-lg" id="username" name="_username" value="{{ last_username }}" placeholder="Username/Email" />
+            <label for="password" class="sr-only">Password</label>
+            <input type="password" class="input-block-level input-lg" id="password" name="_password" placeholder="Password" />
+            {#<label class="checkbox">
+                <input type="checkbox" value="remember-me"> Remember me
+            </label>#}
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('login_quosisp') }}" />
+
+            <button type="submit" class="btn btn-large btn-primary">Login</button>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{# empty Twig template #}
+
+<table class="table table-striped table-bordered">
+    <thead class="text-center">
+        {% for th in theads  %}
+            <tr>
+                {% for td in th.tds  %}
+                <th>
+                    {{- td.val | raw -}}
+                </th>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </thead>
+    <tbody class="text-center">
+        {% for tb in tbodys  %}
+            <tr>
+                {% for td in tb.tds  %}
+                <td>
+                    {{- td.val | raw -}}
+                </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+    {% if tfoots is defined %}
+        <tfoot>
+            {% for tf in tfoots %}
+                <tr>
+                    {% for td in tf.tds  %}
+                    <td>
+                        {{- td.val -}}
+                    </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tfoot>
+    {% endif %}
+</table>

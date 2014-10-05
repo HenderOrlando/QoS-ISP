@@ -1,0 +1,48 @@
+{# empty Twig template #}
+
+<table class="records_list">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Docid</th>
+            <th>Clave</th>
+            <th>Salt</th>
+            <th>Fechacreado</th>
+            <th>Email</th>
+            <th>Token</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for entity in entities %}
+        <tr>
+            <td><a href="{{ path('Usuario_show', { 'id': entity.id }) }}">{{ entity.id }}</a></td>
+            <td>{{ entity.docId }}</td>
+            <td>{{ entity.clave }}</td>
+            <td>{{ entity.salt }}</td>
+            <td>{% if entity.fechaCreado %}{{ entity.fechaCreado|date('Y-m-d H:i:s') }}{% endif %}</td>
+            <td>{{ entity.email }}</td>
+            <td>{{ entity.token }}</td>
+            <td>
+            <ul>
+                <li>
+                    <a href="{{ path('Usuario_show', { 'id': entity.id }) }}">show</a>
+                </li>
+                <li>
+                    <a href="{{ path('Usuario_edit', { 'id': entity.id }) }}">edit</a>
+                </li>
+            </ul>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr colspan="10">
+            <th>
+                <a href="{{ path('Usuario_new') }}">
+                    Create a new entry
+                </a>
+            </th>
+        </tr>
+    </tfoot>
+</table>

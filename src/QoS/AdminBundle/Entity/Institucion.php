@@ -26,15 +26,26 @@ class Institucion extends Objeto
     private $telefono;
 
     /**
-     * @ORM\OneToMany(targetEntity="QoS\MedicionesBundle\Entity\MedicionInstitucion", mappedBy="colegio")
+     * @ORM\OneToMany(targetEntity="QoS\MedicionesBundle\Entity\MedicionInstitucion", mappedBy="institucion")
      */
-    private $medicion;
+    private $mediciones;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="QoS\AdminBundle\Entity\Proveedor", inversedBy="instituciones")
+     * @ORM\JoinTable(name="proveedor_institucion",
+     *  joinColumns={@ORM\JoinColumn(name="institucion_id", referencedColumnName="id")},
+     *  inverseJoinColumns={@ORM\JoinColumn(name="proveedor_id", referencedColumnName="id")}
+     * )
+     */
+    private $proveedores;
+    
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->medicion = new \Doctrine\Common\Collections\ArrayCollection();
+        parent::__construct();
+        $this->mediciones = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -109,12 +120,12 @@ class Institucion extends Objeto
     /**
      * Add medicion
      *
-     * @param \QoS\MedicionesBundle\Entity\MedicionInstitucion $medicion
+     * @param \QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion
      * @return Institucion
      */
-    public function addMedicion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicion)
+    public function addMedicion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion)
     {
-        $this->medicion[] = $medicion;
+        $this->mediciones[] = $medicionInstitucion;
 
         return $this;
     }
@@ -122,11 +133,11 @@ class Institucion extends Objeto
     /**
      * Remove medicion
      *
-     * @param \QoS\MedicionesBundle\Entity\MedicionInstitucion $medicion
+     * @param \QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion
      */
-    public function removeMedicion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicion)
+    public function removeMedicion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion)
     {
-        $this->medicion->removeElement($medicion);
+        $this->mediciones->removeElement($medicionInstitucion);
     }
 
     /**
@@ -134,8 +145,60 @@ class Institucion extends Objeto
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getMedicion()
+    public function getMediciones()
     {
-        return $this->medicion;
+        return $this->mediciones;
     }
+
+    /**
+     * Add proveedor
+     *
+     * @param \QoS\AdminBundle\Entity\Proveedor $proveedor
+     * @return Institucion
+     */
+    public function addProveedor(\QoS\AdminBundle\Entity\Proveedor $proveedor)
+    {
+        $this->proveedores[] = $proveedor;
+
+        return $this;
+    }
+
+    /**
+     * Remove proveedor
+     *
+     * @param \QoS\AdminBundle\Entity\Proveedor $proveedor
+     */
+    public function removeProveedor(\QoS\AdminBundle\Entity\Proveedor $proveedor)
+    {
+        $this->proveedores->removeElement($proveedor);
+    }
+
+    /**
+     * Get proveedor
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getProveedores()
+    {
+        return $this->proveedores;
+    }
+    
+    public function __toString() {
+        return $this->getNombre();
+    }
+
+    public function json($returnArray = false){
+        $array = array(
+            'nombre' => $this->getNombre(),
+            'canonical' => $this->getCanonical(),
+            'abreviacion' => $this->getAbreviacion(),
+            'direccion' => $this->getDireccion(),
+            'telefono' => $this->getTelefono(),
+        );
+        if($returnArray){
+            return $array;
+        }
+        return json_encode($array);
+    }
+
 }

@@ -9,6 +9,11 @@ use Doctrine\ORM\Mapping AS ORM;
 class Proveedor extends Objeto
 {
     /**
+     * @ORM\Column(type="string", length=25, nullable=true)
+     */
+    private $abreviacion;
+    
+    /**
      * @ORM\Column(type="float", nullable=false, options={"unsigned":true})
      */
     private $holgura;
@@ -30,16 +35,55 @@ class Proveedor extends Objeto
 
     /**
      * @ORM\OneToMany(targetEntity="QoS\MedicionesBundle\Entity\MedicionProveedor", mappedBy="proveedor")
+     * @ORM\OrderBy({"fechaCreado" = "DESC"})
      */
-    private $medicionProveedor;
+    private $medicionesProveedor;
+    
+    /**
+     * @ORM\OneToMany(targetEntity="QoS\MedicionesBundle\Entity\MedicionInstitucion", mappedBy="proveedor")
+     * @ORM\OrderBy({"fechaCreado" = "DESC"})
+     */
+    private $medicionesInstitucion;
+    
+    /**
+     * @ORM\ManyToMany(targetEntity="QoS\AdminBundle\Entity\Institucion", mappedBy="proveedores")
+     */
+    private $instituciones;
+    
     /**
      * Constructor
      */
     public function __construct()
     {
-        $this->medicionProveedor = new \Doctrine\Common\Collections\ArrayCollection();
+        parent::__construct();
+        $this->medicionesProveedor = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->medicionesIntitucion = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->instituciones = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    /**
+     * Set abreviacion
+     *
+     * @param string $abreviacion
+     * @return Institucion
+     */
+    public function setAbreviacion($abreviacion)
+    {
+        $this->abreviacion = $abreviacion;
+
+        return $this;
     }
 
+    /**
+     * Get abreviacion
+     *
+     * @return string 
+     */
+    public function getAbreviacion()
+    {
+        return $this->abreviacion;
+    }
+    
     /**
      * Set holgura
      *
@@ -138,9 +182,9 @@ class Proveedor extends Objeto
      * @param \QoS\MedicionesBundle\Entity\MedicionProveedor $medicionProveedor
      * @return Proveedor
      */
-    public function addMedicionProveedor(\QoS\MedicionesBundle\Entity\MedicionProveedor $medicionProveedor)
+    public function addMedicionesProveedor(\QoS\MedicionesBundle\Entity\MedicionProveedor $medicionProveedor)
     {
-        $this->medicionProveedor[] = $medicionProveedor;
+        $this->medicionesProveedor[] = $medicionProveedor;
 
         return $this;
     }
@@ -152,7 +196,7 @@ class Proveedor extends Objeto
      */
     public function removeMedicionProveedor(\QoS\MedicionesBundle\Entity\MedicionProveedor $medicionProveedor)
     {
-        $this->medicionProveedor->removeElement($medicionProveedor);
+        $this->medicionesProveedor->removeElement($medicionProveedor);
     }
 
     /**
@@ -160,8 +204,106 @@ class Proveedor extends Objeto
      *
      * @return \Doctrine\Common\Collections\Collection 
      */
-    public function getMedicionProveedor()
+    public function getMedicionesProveedor()
     {
-        return $this->medicionProveedor;
+        return $this->medicionesProveedor;
     }
+
+    /**
+     * Add medicionInstitucion
+     *
+     * @param \QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion
+     * @return Institucion
+     */
+    public function addMedicionseInstitucion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion)
+    {
+        $this->medicionesInstitucion[] = $medicionInstitucion;
+
+        return $this;
+    }
+
+    /**
+     * Remove medicionInstitucion
+     *
+     * @param \QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion
+     */
+    public function removeMedicionesInstitucion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicionInstitucion)
+    {
+        $this->medicionesInstitucion->removeElement($medicionInstitucion);
+    }
+
+    /**
+     * Get medicionInstitucion
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMedicionesInstitucion()
+    {
+        return $this->medicionesInstitucion;
+    }
+    
+    public function getMediciones($tipo){
+        switch ($tipo) {
+            case 'institucion':
+                return $this->getMedicionesInstitucion();
+            case 'proveedor':
+                return $this->getMedicionesProveedor();
+            default:
+                return array_merge($this->getMedicionesProveedor()->toArray(), $this->getMedicionesInstitucion());
+        }
+    }
+    
+    /**
+     * Add institucion
+     *
+     * @param \QoS\AdminBundle\Entity\Institucion $institucion
+     * @return Institucion
+     */
+    public function addInstitucion(\QoS\AdminBundle\Entity\Institucion $institucion)
+    {
+        $this->instituciones[] = $institucion;
+
+        return $this;
+    }
+
+    /**
+     * Remove institucion
+     *
+     * @param \QoS\AdminBundle\Entity\Institucion $institucion
+     */
+    public function removeInstitucion(\QoS\AdminBundle\Entity\Institucion $institucion)
+    {
+        $this->instituciones->removeElement($institucion);
+    }
+
+    /**
+     * Get institucion
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getInstituciones()
+    {
+        return $this->instituciones;
+    }
+    
+    public function __toString() {
+        return $this->getNombre();
+    }
+
+    public function json($returnArray = false){
+        $array = array(
+            'nombre' => $this->getNombre(),
+            'canonical' => $this->getCanonical(),
+            'abreviacion' => $this->getAbreviacion(),
+            'direccion' => $this->getDireccion(),
+            'telefono' => $this->getTelefono(),
+            'holgura' => $this->getHolgura(),
+            'unidadHolgura' => $this->getUnidadHolgura(),
+        );
+        if($returnArray){
+            return $array;
+        }
+        return json_encode($array);
+    }
+
 }

@@ -11,33 +11,104 @@ class MedicionInstitucion
     /**
      * @ORM\Id
      * @ORM\Column(type="guid")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\GeneratedValue(strategy="UUID")
      */
     private $id;
 
     /**
-     * @ORM\Column(type="smallint", nullable=false)
-     */
-    private $numPaquetes;
-
-    /**
      * @ORM\ManyToOne(targetEntity="QoS\MedicionesBundle\Entity\Paquete", inversedBy="configuracion")
-     * @ORM\JoinColumn(name="paquete", referencedColumnName="id", nullable=false)
+     * @ORM\JoinColumn(name="paquete", referencedColumnName="id", nullable=true)
      */
     private $paquete;
 
     /**
-     * @ORM\ManyToOne(targetEntity="QoS\AdminBundle\Entity\Institucion", inversedBy="medicion")
-     * @ORM\JoinColumn(name="colegio", referencedColumnName="id")
+     * @ORM\ManyToOne(targetEntity="QoS\AdminBundle\Entity\Institucion", inversedBy="mediciones")
+     * @ORM\JoinColumn(name="colegio", referencedColumnName="id", nullable=false)
      */
-    private $colegio;
+    private $institucion;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="QoS\AdminBundle\Entity\Proveedor", inversedBy="medicionesInstitucion")
+     * @ORM\JoinColumn(name="proveedor", referencedColumnName="id", nullable=false)
+     */
+    private $proveedor;
+    
+    /**
+     * @ORM\ManyToOne(targetEntity="QoS\AdminBundle\Entity\Usuario", inversedBy="medicionesInstitucion")
+     * @ORM\JoinColumn(name="usuario", referencedColumnName="id", nullable=false)
+     */
+    private $usuario;
 
     /**
-     * @ORM\ManyToOne(targetEntity="QoS\MedicionesBundle\Entity\Medicion", inversedBy="medicionInstitucion")
-     * @ORM\JoinColumn(name="medicion", referencedColumnName="id")
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
      */
-    private $medicion;
+    private $timeTotal;//seg
 
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $timeNameLookup;//seg
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $timeConnect;//seg
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $timePreTransfer;//seg
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $timeStartTransfer;//seg
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $timeRedirect;//seg
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $sizeUpload;//bytes
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $sizeDownload;//bytes
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $speedUpload;//bytes
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $speedDownload;
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $lengthUpload;//bytes
+
+    /**
+     * @ORM\Column(type="float", nullable=true, options={"unsigned":true})
+     */
+    private $lengthDownload;//bytes
+    
+    /**
+     * @ORM\Column(type="datetime", nullable=false)
+     */
+    protected $fechaCreado;
+
+    public function __construct() {
+        $this->fechaCreado = new \DateTime();
+        $this->numPaquetes = 0;
+    }
+    
     /**
      * Get id
      *
@@ -46,29 +117,6 @@ class MedicionInstitucion
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * Set numPaquetes
-     *
-     * @param integer $numPaquetes
-     * @return MedicionInstitucion
-     */
-    public function setNumPaquetes($numPaquetes)
-    {
-        $this->numPaquetes = $numPaquetes;
-
-        return $this;
-    }
-
-    /**
-     * Get numPaquetes
-     *
-     * @return integer 
-     */
-    public function getNumPaquetes()
-    {
-        return $this->numPaquetes;
     }
 
     /**
@@ -97,12 +145,12 @@ class MedicionInstitucion
     /**
      * Set colegio
      *
-     * @param \QoS\AdminBundle\Entity\Institucion $colegio
+     * @param \QoS\AdminBundle\Entity\Institucion $institucion
      * @return MedicionInstitucion
      */
-    public function setColegio(\QoS\AdminBundle\Entity\Institucion $colegio = null)
+    public function setInstitucion(\QoS\AdminBundle\Entity\Institucion $institucion = null)
     {
-        $this->colegio = $colegio;
+        $this->institucion = $institucion;
 
         return $this;
     }
@@ -112,31 +160,415 @@ class MedicionInstitucion
      *
      * @return \QoS\AdminBundle\Entity\Institucion 
      */
-    public function getColegio()
+    public function getInstitucion()
     {
-        return $this->colegio;
+        return $this->institucion;
     }
 
     /**
-     * Set medicion
+     * Set proveedor
      *
-     * @param \QoS\MedicionesBundle\Entity\Medicion $medicion
-     * @return MedicionInstitucion
+     * @param \QoS\AdminBundle\Entity\Proveedor $proveedor
+     * @return ProveedorInstitucion
      */
-    public function setMedicion(\QoS\MedicionesBundle\Entity\Medicion $medicion = null)
+    public function setProveedor(\QoS\AdminBundle\Entity\Proveedor $proveedor = null)
     {
-        $this->medicion = $medicion;
+        $this->proveedor = $proveedor;
 
         return $this;
     }
 
     /**
-     * Get medicion
+     * Get proveedor
      *
-     * @return \QoS\MedicionesBundle\Entity\Medicion 
+     * @return \QoS\AdminBundle\Entity\Proveedor 
      */
-    public function getMedicion()
+    public function getProveedor()
     {
-        return $this->medicion;
+        return $this->proveedor;
+    }
+
+    /**
+     * Set usuario
+     *
+     * @param \QoS\AdminBundle\Entity\Usuario $usuario
+     * @return UsuarioInstitucion
+     */
+    public function setUsuario(\QoS\AdminBundle\Entity\Usuario $usuario = null)
+    {
+        $this->usuario = $usuario;
+
+        return $this;
+    }
+
+    /**
+     * Get usuario
+     *
+     * @return \QoS\AdminBundle\Entity\Usuario 
+     */
+    public function getUsuario()
+    {
+        return $this->usuario;
+    }
+    
+    /**
+     * Set fechaCreado
+     *
+     * @param \DateTime $fechaCreado
+     * @return Objeto
+     */
+    public function setFechaCreado($fechaCreado)
+    {
+        $this->fechaCreado = $fechaCreado;
+
+        return $this;
+    }
+
+    /**
+     * Get fechaCreado
+     *
+     * @return \DateTime 
+     */
+    public function getFechaCreado()
+    {
+        return $this->fechaCreado;
+    }
+    
+    /**
+     * Set velocidad
+     *
+     * @param float $velocidad
+     * @return MedicionInstitucion
+     */
+    public function setVelocidad($velocidad)
+    {
+        $this->velocidad = $velocidad;
+        $size = $velocidad;
+        $unid = 'byte';
+        if($size > 1024){
+            $size = $size/1024;//Convertido a Kb
+            $unid = 'Kb';
+            if($size > 1024){
+                $size = $size/1024;//Convertido a Mb
+                $unid = 'Mb';
+                if($size > 1024){
+                    $unid = 'Gb';
+                    $size = $size/1024;//Convertido a Gb
+                }
+            }
+        }
+        $this->setUnidad($unid.'/seg');
+
+        return $this;
+    }
+    
+    public function getNombre($short = false){
+        if($short){
+            return 'Medición en la Institución '.$this->getInstitucion();
+        }
+        return 'Medición del Proveedor '.$this->getProveedor().' en la Institución '.$this->getInstitucion();
+    }
+
+    /**
+     * Set timeTotal
+     *
+     * @param float $timeTotal
+     * @return MedicionInstitucion
+     */
+    public function setTimeTotal($timeTotal)
+    {
+        $this->timeTotal = $timeTotal;
+
+        return $this;
+    }
+
+    /**
+     * Get timeTotal
+     *
+     * @return float 
+     */
+    public function getTimeTotal()
+    {
+        return $this->timeTotal;
+    }
+
+    /**
+     * Set timeNameLookup
+     *
+     * @param float $timeNameLookup
+     * @return MedicionInstitucion
+     */
+    public function setTimeNameLookup($timeNameLookup)
+    {
+        $this->timeNameLookup = $timeNameLookup;
+
+        return $this;
+    }
+
+    /**
+     * Get timeNameLookup
+     *
+     * @return float 
+     */
+    public function getTimeNameLookup()
+    {
+        return $this->timeNameLookup;
+    }
+
+    /**
+     * Set timeConnect
+     *
+     * @param float $timeConnect
+     * @return MedicionInstitucion
+     */
+    public function setTimeConnect($timeConnect)
+    {
+        $this->timeConnect = $timeConnect;
+
+        return $this;
+    }
+
+    /**
+     * Get timeConnect
+     *
+     * @return float 
+     */
+    public function getTimeConnect()
+    {
+        return $this->timeConnect;
+    }
+
+    /**
+     * Set timePreTransfer
+     *
+     * @param float $timePreTransfer
+     * @return MedicionInstitucion
+     */
+    public function setTimePreTransfer($timePreTransfer)
+    {
+        $this->timePreTransfer = $timePreTransfer;
+
+        return $this;
+    }
+
+    /**
+     * Get timePreTransfer
+     *
+     * @return float 
+     */
+    public function getTimePreTransfer()
+    {
+        return $this->timePreTransfer;
+    }
+
+    /**
+     * Set timeStartTransfer
+     *
+     * @param float $timeStartTransfer
+     * @return MedicionInstitucion
+     */
+    public function setTimeStartTransfer($timeStartTransfer)
+    {
+        $this->timeStartTransfer = $timeStartTransfer;
+
+        return $this;
+    }
+
+    /**
+     * Get timeStartTransfer
+     *
+     * @return float 
+     */
+    public function getTimeStartTransfer()
+    {
+        return $this->timeStartTransfer;
+    }
+
+    /**
+     * Set timeRedirect
+     *
+     * @param float $timeRedirect
+     * @return MedicionInstitucion
+     */
+    public function setTimeRedirect($timeRedirect)
+    {
+        $this->timeRedirect = $timeRedirect;
+
+        return $this;
+    }
+
+    /**
+     * Get timeRedirect
+     *
+     * @return float 
+     */
+    public function getTimeRedirect()
+    {
+        return $this->timeRedirect;
+    }
+
+    /**
+     * Set sizeUpload
+     *
+     * @param float $sizeUpload
+     * @return MedicionInstitucion
+     */
+    public function setSizeUpload($sizeUpload)
+    {
+        $this->sizeUpload = $sizeUpload;
+
+        return $this;
+    }
+
+    /**
+     * Get sizeUpload
+     *
+     * @return float 
+     */
+    public function getSizeUpload()
+    {
+        return $this->sizeUpload;
+    }
+
+    /**
+     * Set sizeDownload
+     *
+     * @param float $sizeDownload
+     * @return MedicionInstitucion
+     */
+    public function setSizeDownload($sizeDownload)
+    {
+        $this->sizeDownload = $sizeDownload;
+
+        return $this;
+    }
+
+    /**
+     * Get sizeDownload
+     *
+     * @return float 
+     */
+    public function getSizeDownload()
+    {
+        return $this->sizeDownload;
+    }
+
+    /**
+     * Set speedUpload
+     *
+     * @param float $speedUpload
+     * @return MedicionInstitucion
+     */
+    public function setSpeedUpload($speedUpload)
+    {
+        $this->speedUpload = $speedUpload;
+
+        return $this;
+    }
+
+    /**
+     * Get speedUpload
+     *
+     * @return float 
+     */
+    public function getSpeedUpload()
+    {
+        return $this->speedUpload;
+    }
+
+    /**
+     * Set speedDownload
+     *
+     * @param float $speedDownload
+     * @return MedicionInstitucion
+     */
+    public function setSpeedDownload($speedDownload)
+    {
+        $this->speedDownload = $speedDownload;
+
+        return $this;
+    }
+
+    /**
+     * Get speedDownload
+     *
+     * @return float 
+     */
+    public function getSpeedDownload()
+    {
+        return $this->speedDownload;
+    }
+
+    /**
+     * Set lengthUpload
+     *
+     * @param float $lengthUpload
+     * @return MedicionInstitucion
+     */
+    public function setLengthUpload($lengthUpload)
+    {
+        $this->lengthUpload = $lengthUpload;
+
+        return $this;
+    }
+
+    /**
+     * Get lengthUpload
+     *
+     * @return float 
+     */
+    public function getLengthUpload()
+    {
+        return $this->lengthUpload;
+    }
+
+    /**
+     * Set lengthDownload
+     *
+     * @param float $lengthDownload
+     * @return MedicionInstitucion
+     */
+    public function setLengthDownload($lengthDownload)
+    {
+        $this->lengthDownload = $lengthDownload;
+
+        return $this;
+    }
+
+    /**
+     * Get lengthDownload
+     *
+     * @return float 
+     */
+    public function getLengthDownload()
+    {
+        return $this->lengthDownload;
+    }
+    
+    public function json($returnArray = false){
+        $array = array(
+            'institucion' => $this->getInstitucion()->json(true),
+            'proveedor' => $this->getProveedor()->json(true),
+            'paquete' => $this->getPaquete()->json(true),
+            'usuario' => $this->getUsuario()->json(true),
+            'lengthDownload' => $this->getLengthDownload(),
+            'lengthUpload' => $this->getLengthUpload(),
+            'nombre' => $this->getNombre(true),
+            'nombreShort' => $this->getNombre(),
+            'timeTotal' => $this->getTimeTotal(),
+            'sizeUpload' => $this->getSizeUpload(),
+            'speedUpload' => $this->getSpeedUpload(),
+            'timeConnect' => $this->getTimeConnect(),
+            'sizeDownload' => $this->getSizeDownload(),
+            'timeRedirect' => $this->getTimeRedirect(),
+            'speedDownload' => $this->getSpeedDownload(),
+            'timeNamelookup' => $this->getTimeNameLookup(),
+            'timePretransfer' => $this->getTimePreTransfer(),
+            'timeStarttransfer' => $this->getTimeStartTransfer(),
+        );
+        if($returnArray){
+            return $array;
+        }
+        return json_encode($array);
     }
 }

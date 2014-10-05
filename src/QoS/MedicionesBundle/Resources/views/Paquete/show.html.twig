@@ -1,44 +1,82 @@
-{% extends '::base.html.twig' %}
+{% extends 'QoSAdminBundle:Secured:index.html.twig' %}
 
-{% block body -%}
-    <h1>Paquete</h1>
-
-    <table class="record_properties">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ entity.id }}</td>
-            </tr>
-            <tr>
-                <th>Tam</th>
-                <td>{{ entity.tam }}</td>
-            </tr>
-            <tr>
-                <th>Unidadtam</th>
-                <td>{{ entity.unidadTam }}</td>
-            </tr>
-            <tr>
-                <th>Url</th>
-                <td>{{ entity.url }}</td>
-            </tr>
-            <tr>
-                <th>Fullurl</th>
-                <td>{{ entity.fullUrl }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-        <ul class="record_actions">
-    <li>
-        <a href="{{ path('Paquete') }}">
-            Back to the list
-        </a>
-    </li>
-    <li>
-        <a href="{{ path('Paquete_edit', { 'id': entity.id }) }}">
-            Edit
-        </a>
-    </li>
-    <li>{{ form(delete_form) }}</li>
-</ul>
-{% endblock %}
+{% block rowSideBar -%}
+    {% if entity is defined and entity is not null %}
+        {% if form is defined %}
+            {{ form_start(form) }}
+                <ul class="nav nav-sidebar nav-20">
+                    <li class="border-t border-b title">
+                        <h3>
+                            Paquete "{{entity.nombre}}"
+                        </h3>
+                    </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.nombre) }}
+                        </div>
+                    </li>
+                    <li>
+                        {{- entity.path is defined?'Ya existe el archivo para el paquete':'Suba el archivo para el paquete' -}}
+                        <div class="form-group">
+                            {{ form_row(form.file) }}
+                        </div>
+                    </li>
+                    <li class="border-t border-b title text-center">
+                        {{- form_row(form.submit,{ 'attr': {'class': 'btn btn-lg btn-primary btn-block border-radius-none'} }) -}}
+                    </li>
+                </ul>
+                <div class="hide">
+                    {{- form_rest(form) -}}
+                </div>
+            {{ form_end(form) }}
+                <ul class="nav nav-sidebar">
+                    <li class="border-t border-b title text-center">
+                        {% if delete_form is defined and delete_form is not null %}
+                                {{ form(delete_form) }}
+                        {% endif %}
+                    </li>
+                </ul>
+                <ul class="nav nav-sidebar">
+                    <li class="border-t border-b title text-center">
+                        <a href="{{ path('Institucion') }}" class="btn btn-lg btn-default border-radius-none btn-block">
+                            Volver a lista de Instituciones
+                        </a>
+                    </li>
+                </ul>
+        {% else %}
+            <ul class="nav nav-sidebar">
+                <li class="border-t border-b title">
+                    <h3>
+                        {{- entity.nombre -}}
+                    </h3>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Tamaño: {{- entity.tam ~ entity.unidadTam -}}
+                    </div>
+                </li>
+                <li>
+                    <div class="form-group">
+                        Archivo: {{- entity.path -}}
+                    </div>
+                </li>
+                <li class="border-t border-b title text-center">
+                    <a href="{{ path('Paquete') }}" class="btn btn-lg btn-default btn-block border-radius-none">
+                        Volver a lista de Paquetes
+                    </a>
+                    {% if delete_form is defined and delete_form is not null %}
+                            {{ form(delete_form) }}
+                    {% endif %}
+                </li>
+            </ul>
+        {% endif %}
+    {% else %}
+        <div class="label label-warning label-lg">
+            El Paquete no es válido.
+        </div>
+    {% endif %}
+{% endblock rowSideBar %}
+    
+{#% block rowMain %}
+    
+{% endblock rowMain %#}

@@ -15,10 +15,26 @@ class PaqueteType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('tam')
-            ->add('unidadTam')
-            ->add('url')
-            ->add('fullUrl')
+            ->add('nombre', null, array(
+                'label'     =>  'Nombre del Archivo',
+                'label_attr'=>  array(
+                    'class' =>  'sr-only',
+                ),
+                'attr'      =>  array(
+                    'class'         =>  'form-control input-lg',
+                    'placeholder'   =>  'Nombre del Archivo',
+                ),
+            ))
+            ->add('file', null, array(
+                'label'     =>  'Archivo a cargar',
+                'label_attr'=>  array(
+                    'class' =>  'sr-only',
+                ),
+                'attr'      =>  array(
+                    'class'         =>  'form-control input-lg',
+                    'placeholder'   =>  'Archivo a cargar',
+                ),
+            ))
         ;
     }
     

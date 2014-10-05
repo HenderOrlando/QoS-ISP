@@ -1,17 +1,20 @@
 <?php
 namespace QoS\AdminBundle\Entity;
 use Doctrine\ORM\Mapping AS ORM;
+use Symfony\Component\Security\Core\User\AdvancedUserInterface;
+use Symfony\Component\Security\Core\User\EquatableInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="QoS\AdminBundle\Repository\UsuarioRepository")
  * @ORM\Table(name="usuario", options={"comment":"Usuarios del sistema"})
  */
-class Usuario
+class Usuario implements AdvancedUserInterface, \Serializable, EquatableInterface
 {
     /**
      * @ORM\Id
      * @ORM\Column(type="guid")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\GeneratedValue(strategy="UUID")
      */
     private $id;
 
@@ -22,6 +25,16 @@ class Usuario
 
     /**
      * @ORM\Column(type="string", length=50, nullable=false)
+     */
+    private $username;
+
+    /**
+     * @ORM\Column(type="string", length=50, nullable=false)
+     */
+    private $usernamecanonical;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=false)
      */
     private $clave;
 
@@ -37,31 +50,122 @@ class Usuario
     private $fechaCreado;
 
     /**
-     * @ORM\Column(type="string", nullable=false)
-     */
-    private $discr;
-
-    /**
      * @ORM\Column(type="string", unique=true, length=255, nullable=true)
      */
     private $email;
 
     /**
      * @ORM\Column(type="string", unique=true, length=50, nullable=true)
+     * @ORM\GeneratedValue(strategy="UUID")
      */
-    private $token;
-
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $tokenExpire;
+    private $token = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="QoS\AdminBundle\Entity\Rol", inversedBy="usuario")
      * @ORM\JoinColumn(name="rol", referencedColumnName="id", nullable=false)
      */
     private $rol;
+    
+    /**
+     * @ORM\OneToMany(targetEntity="QoS\MedicionesBundle\Entity\MedicionInstitucion", mappedBy="usuario")
+     */
+    private $medicionesInstitucion;
+    
+    /**
+     * @ORM\OneToMany(targetEntity="QoS\MedicionesBundle\Entity\MedicionProveedor", mappedBy="usuario")
+     */
+    private $medicionesProveedor;
 
+    public function __construct() {
+        $this->setFechaCreado(null);
+        if(is_null($this->token)){
+            $this->setToken(md5(time()));
+        }
+        $this->medicionesInstitucion = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->medicionesProveedor = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    /**
+     * Add medicionInstitucion
+     *
+     * @param \QoS\AdminBundle\Entity\MedicionInstitucion $medicion
+     * @return Rol
+     */
+    public function addMedicionInstitucion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicion)
+    {
+        $this->medicion[] = $medicion;
+
+        return $this;
+    }
+
+    /**
+     * Remove medicionInstitucion
+     *
+     * @param \QoS\AdminBundle\Entity\MedicionInstitucion $medicion
+     */
+    public function removeMedicionInstitucion(\QoS\MedicionesBundle\Entity\MedicionInstitucion $medicion)
+    {
+        $this->medicionesInstitucion->removeElement($medicion);
+    }
+
+    /**
+     * Get medicionesInstitucion
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMedicionesInstitucion()
+    {
+        return $this->medicionesInstitucion;
+    }
+    
+    /**
+     * Add medicionProveedor
+     *
+     * @param \QoS\AdminBundle\Entity\MedicionProveedor $medicion
+     * @return Rol
+     */
+    public function addMedicionProveedor(\QoS\MedicionesBundle\Entity\MedicionProveedor $medicion)
+    {
+        $this->medicion[] = $medicion;
+
+        return $this;
+    }
+
+    /**
+     * Remove medicionProveedor
+     *
+     * @param \QoS\AdminBundle\Entity\MedicionProveedor $medicion
+     */
+    public function removeMedicionProveedor(\QoS\MedicionesBundle\Entity\MedicionProveedor $medicion)
+    {
+        $this->medicionesProveedor->removeElement($medicion);
+    }
+
+    /**
+     * Get medicionesProveedor
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMedicionesProveedor()
+    {
+        return $this->medicionesProveedor;
+    }
+
+    /**
+     * Get medicionesProveedor
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMediciones($tipo)
+    {
+        switch($tipo){
+            case 'institucion':
+                return $this->getMedicionesInstitucion();
+            case 'proveedor':
+                return $this->getMedicionesProveedor();
+        }
+    }
+    
     /**
      * Get id
      *
@@ -119,6 +223,52 @@ class Usuario
     }
 
     /**
+     * Set username
+     *
+     * @param string $username
+     * @return Usuario
+     */
+    public function setUsername($username)
+    {
+        $this->username = $username;
+        $this->usernamecanonical = $this->normaliza($username);
+        return $this;
+    }
+    
+    /**
+     * Get username
+     *
+     * @return string 
+     */
+    public function getUsername()
+    {
+        return $this->username;
+    }
+//
+//    /**
+//     * Set usernamecanonical
+//     *
+//     * @param string $usernamecanonical
+//     * @return Usuario
+//     */
+//    public function setUsernamecanonical($usernamecanonical)
+//    {
+//        $this->usernamecanonical = $usernamecanonical;
+//
+//        return $this;
+//    }
+
+    /**
+     * Get username
+     *
+     * @return string 
+     */
+    public function getUsernamecanonical()
+    {
+        return $this->usernamecanonical;
+    }
+
+    /**
      * Set salt
      *
      * @param guid $salt
@@ -147,9 +297,10 @@ class Usuario
      * @param \DateTime $fechaCreado
      * @return Usuario
      */
-    public function setFechaCreado($fechaCreado)
+    public function setFechaCreado($fechaCreado = null)
     {
-        $this->fechaCreado = $fechaCreado;
+        $this->fechaCreado = new \DateTime();
+//        $this->fechaCreado = $fechaCreado;
 
         return $this;
     }
@@ -162,29 +313,6 @@ class Usuario
     public function getFechaCreado()
     {
         return $this->fechaCreado;
-    }
-
-    /**
-     * Set discr
-     *
-     * @param string $discr
-     * @return Usuario
-     */
-    public function setDiscr($discr)
-    {
-        $this->discr = $discr;
-
-        return $this;
-    }
-
-    /**
-     * Get discr
-     *
-     * @return string 
-     */
-    public function getDiscr()
-    {
-        return $this->discr;
     }
 
     /**
@@ -234,29 +362,6 @@ class Usuario
     }
 
     /**
-     * Set tokenExpire
-     *
-     * @param \DateTime $tokenExpire
-     * @return Usuario
-     */
-    public function setTokenExpire($tokenExpire)
-    {
-        $this->tokenExpire = $tokenExpire;
-
-        return $this;
-    }
-
-    /**
-     * Get tokenExpire
-     *
-     * @return \DateTime 
-     */
-    public function getTokenExpire()
-    {
-        return $this->tokenExpire;
-    }
-
-    /**
      * Set rol
      *
      * @param \QoS\AdminBundle\Entity\Rol $rol
@@ -278,4 +383,107 @@ class Usuario
     {
         return $this->rol;
     }
+
+    public function eraseCredentials() {
+        
+    }
+
+    public function getPassword() {
+        return $this->getClave();
+    }
+
+    public function setPassword($clave) {
+        return $this->setClave($clave);
+    }
+
+    public function getRoles() {
+        return array(
+            $this->getRol()->getRole(),
+        );
+    }
+
+    public function serialize() {
+        return serialize(array(
+            $this->id,
+            $this->clave,
+            $this->username,
+        ));
+    }
+
+    public function unserialize($serialized) {
+        list (
+            $this->id,
+            $this->clave,
+            $this->username,
+        ) = unserialize($serialized);
+    }
+
+    public function isEqualTo(UserInterface $user)
+    {
+//        die($user->getPassword());
+        if (!$user instanceof Usuario) {
+            return false;
+        }
+
+        if ($this->clave !== $user->getPassword()) {
+            return false;
+        }
+//
+        if ($this->salt !== $user->getSalt()) {
+            return false;
+        }
+
+        if ($this->username !== $user->getUsername()) {
+            return false;
+        }
+        
+        if ($this->usernamecanonical !== $user->getUsernamecanonical()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function isAccountNonExpired() {
+        return true;
+    }
+
+    public function isAccountNonLocked() {
+        return true;
+    }
+
+    public function isCredentialsNonExpired() {
+        return true;
+    }
+
+    public function isEnabled() {
+        return true;
+    }
+    
+    public function __toString() {
+        return $this->getEmail();
+    }
+
+    function normaliza ($cadena){
+        $originales = 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûýýþÿŔŕ';
+        $modificadas = 'aaaaaaaceeeeiiiidnoooooouuuuybsaaaaaaaceeeeiiiidnoooooouuuyybyRr';
+        $cadena = utf8_decode($cadena);
+        $cadena = strtr($cadena, utf8_decode($originales), $modificadas);
+        $cadena = str_replace(' ','-',strtolower($cadena));
+        return utf8_encode($cadena);
+    }
+
+    public function json($returnArray = false){
+        $array = array(
+            'docid' => $this->getDocId(),
+            'email' => $this->getEmail(),
+            'username' => $this->getUsername(),
+            'usernameCanonical' => $this->getUsernamecanonical(),
+        );
+        if($returnArray){
+            return $array;
+        }
+        return json_encode($array);
+    }
+
 }

@@ -1,0 +1,14 @@
+{% extends '::base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('bundles/qosadmin/css/login.css') }}" />
+{% endblock stylesheets %}
+{% block body %}
+
+
+    <div class="container text-center">
+        <h2 class="form-signin-heading">Software para la Medición del servicio de Internet</h2>
+        <a class="btn btn-primary btn-bg" href="{{ path('login') }}">Login</a>
+    </div>
+{% endblock %}
