@@ -143,9 +143,23 @@ class SecuredController extends Controller
     function iniciaSesion($pag, Request $request, $name = false, $array = array()){
         $security = $this->get('security.context');
         $name = $this->getNameUrl($request, $name);
+        $datosGrafico = $this->getDatosGrafico();
+        $rowMains = array();
+        foreach($datosGrafico as $name => $dt){
+            $rowMains[] = array(
+                'name'  =>  $name,
+                'table' =>  $this->renderView('QoSAdminBundle:Secured:_table.html.twig', array(
+                    'theads' => $this->getTDs($name),
+                    'tbodys' => $this->getTBodys($name),
+                    )
+                )
+            );
+        }
         $rta = array_merge($array, array(
-            'name' => $name,
             'last_username' => $request->getSession()->get(SecurityContext::LAST_USERNAME),
+            'rowMains'      => $rowMains,
+            'datosGrafico'  => $datosGrafico,
+            'name'      => $name,
         ));
 //        if($security->isGranted('ROLE_SUPER_ADMIN') && $pag !== 'super'){
 //            $rta = $this->redirect($this->generateUrl('index_super_admin'));
@@ -158,6 +172,123 @@ class SecuredController extends Controller
 //        }
         return $rta;
     }
+    
+    public function getDatosGrafico($datos = null) {
+        $em = $this->getDoctrine()->getManager();
+        
+        $instituciones = $em->getRepository('QoSAdminBundle:Institucion')->findAll();
+        if(is_null($datos)){
+            $datos = array();
+        }
+        $datos['mediciones-ISP-instituciones'] = array();
+        foreach($instituciones as $institucion){
+            $datos['mediciones-ISP-instituciones']['name'] = 'mediciones-ISP-instituciones';
+            foreach($institucion->getProveedores() as $proveedor){
+                $datos['mediciones-ISP-instituciones']['values'][] = array(
+                    'label' => $proveedor->getAbreviacion().'-'.$institucion->getAbreviacion(),
+                    'value' => $institucion->getPromedioTotal($proveedor, false),
+                );
+            }
+        }
+        $proveedores = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
+        $datos['velocidad-descarga-proveedores'] = array();
+        foreach($proveedores as $proveedor){
+            $datos['velocidad-descarga-proveedores']['name'] = 'velocidad-descarga-proveedores';
+            $datos['velocidad-descarga-proveedores']['values'][] = array(
+                'label' => $proveedor->getNombre().' ('.$proveedor->getAbreviacion().')',
+                'value' => $proveedor->getPromedioDownload(null, false),
+            );
+        }
+        return $datos;
+    }
+    
+    public function getTDs($name) {
+        $em = $this->getDoctrine()->getManager();
+        
+        $tds = array();
+        switch($name){
+            case 'mediciones-ISP-instituciones':
+                $tds = array(
+                    array(
+                        'tds' => array(
+                            array(
+                                'val' => 'Institución'
+                            ),
+                            array(
+                                'val' => 'Proveedor'
+                            ),
+                            array(
+                                'val' => 'No. Mediciones - Velocidad Promedio'
+                            ),
+                        ),
+                    ),
+                );
+                break;
+            case 'velocidad-descarga-proveedores':
+                $tds = array(
+                    array(
+                        'tds' => array(
+                            array(
+                                'val' => 'Proveedor'
+                            ),
+                            array(
+                                'val' => 'Total Mediciones en Instituciones'
+                            ),
+                            array(
+                                'val' => 'Velocidad Promedio'
+                            ),
+                        ),
+                    ),
+                );
+                break;
+        }
+        return $tds;
+    }
+    public function getTBodys($name) {
+        $em = $this->getDoctrine()->getManager();
+        
+        $tbodys = array();
+        switch($name){
+            case 'mediciones-ISP-instituciones':
+                $instituciones = $em->getRepository('QoSAdminBundle:Institucion')->findAll();
+                foreach($instituciones as $institucion){
+                    $usrs = '';
+                    foreach($institucion->getProveedores() as $proveedor){
+                        $tbodys[]['tds'] = array(
+                            array(
+                                'val' => '<a href="'.$this->generateUrl('Institucion_show', array('id' => $institucion->getId())).'">'.$institucion->getNombre().' ('.$institucion->getAbreviacion().')</a>',
+                            ),
+                            array(
+                                'val' => '<a href="'.$this->generateUrl('Proveedor_show', array('id' => $proveedor->getId())).'">'.$proveedor->getNombre().' ('.$proveedor->getAbreviacion().')</a>',
+                            ),
+                            array(
+                                'val' => $institucion->getMediciones()->count().' - '.$institucion->getPromedioTotal($proveedor),
+                            ),
+                        );
+                    }
+                }
+                break;
+            case 'velocidad-descarga-proveedores':
+                $proveedores = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
+                foreach($proveedores as $proveedor){
+                    $usrs = '';
+                    $tbodys[]['tds'] = array(
+                        array(
+                            'val' => '<a href="'.$this->generateUrl('Proveedor_show', array('id' => $proveedor->getId())).'">'.$proveedor->getNombre().' ('.$proveedor->getAbreviacion().')</a>',
+                        ),
+                        array(
+                            'val' => $proveedor->getMedicionesInstitucion()->count(),
+                        ),
+                        array(
+                            'val' => $proveedor->getPromedioTotal(),
+                        ),
+                    );
+                }
+                break;
+        }
+        return $tbodys;
+    }
+    
     function getNameUrl(Request $request, $name){
         if(!$name){
             $user = $this->getUser();

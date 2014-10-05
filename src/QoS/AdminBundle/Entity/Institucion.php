@@ -149,6 +149,43 @@ class Institucion extends Objeto
     {
         return $this->mediciones;
     }
+    
+    public function getPromedioDownload(Proveedor $proveedor = null, $humanize = true){
+        return $this->getPromedio($proveedor, true, $humanize);
+    }
+    public function getPromedioUpload(Proveedor $proveedor = null, $humanize = true){
+        return $this->getPromedio($proveedor,false, $humanize);
+    }
+    public function getPromedioTotal(Proveedor $proveedor = null, $humanize = true){
+        return $this->getPromedio($proveedor, null, $humanize);
+    }
+    private function getPromedio(Proveedor $proveedor = null, $download = false, $humanize = true){
+        $promedio = 0;
+        $count = 0;
+        $medicion = null;
+        foreach ($this->getMediciones() as $medicion) {
+            $speed = 0;
+            if(is_null($proveedor) || $medicion->getProveedor()->getId() === $proveedor->getId()){
+                if(!is_null($download) && $download){
+                    $speed = $medicion->getSpeedDownload();
+                }elseif(!is_null($download) && !$download){
+                    $speed = $medicion->getSpeedUpload();
+                }else{
+                    $speed = ($medicion->getSpeedDownload() + $medicion->getSpeedUpload())/2;
+                }
+                $promedio += $speed;
+                $count++;
+            }
+        }
+        if($count === 0){
+            $promedio = 0;
+            $count = 1;
+        }
+        if($humanize){
+            return $medicion->humanize($promedio/$count).'/seg';
+        }
+        return $medicion->humanize($promedio/$count,false);//byte/seg
+    }
 
     /**
      * Add proveedor

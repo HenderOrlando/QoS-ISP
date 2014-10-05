@@ -545,6 +545,17 @@ class MedicionInstitucion
         return $this->lengthDownload;
     }
     
+    public function humanize($size, $units_ = true){
+        $units = array('bytes', 'KB', 'MB', 'GB', 'TB', 'PB');
+        $ord = floor(log($size) / log(1024));
+        $ord = min(max(0, $ord), count($units) - 1);
+        $s = round(($size / pow(1024, $ord)) * 100) / 100;
+        if($units_){
+            return $s.' '.$units[$ord];
+        }
+        return $s;
+    }
+    
     public function json($returnArray = false){
         $array = array(
             'institucion' => $this->getInstitucion()->json(true),

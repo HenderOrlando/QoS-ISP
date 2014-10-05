@@ -286,6 +286,43 @@ class Proveedor extends Objeto
         return $this->instituciones;
     }
     
+    public function getPromedioDownload(Institucion $institucion = null, $humanize = true){
+        return $this->getPromedio($institucion, true, $humanize);
+    }
+    public function getPromedioUpload(Institucion $institucion = null, $humanize = true){
+        return $this->getPromedio($institucion,false, $humanize);
+    }
+    public function getPromedioTotal(Institucion $institucion = null, $humanize = true){
+        return $this->getPromedio($institucion, null, $humanize);
+    }
+    private function getPromedio(Institucion $institucion = null, $download = false, $humanize = true){
+        $promedio = 0;
+        $count = 0;
+        $medicion = null;
+        foreach ($this->getMedicionesInstitucion() as $medicion) {
+            $speed = 0;
+            if(is_null($institucion) || $medicion->getInstitucion()->getId() === $institucion->getId()){
+                if(!is_null($download) && $download){
+                    $speed = $medicion->getSpeedDownload();
+                }elseif(!is_null($download) && !$download){
+                    $speed = $medicion->getSpeedUpload();
+                }else{
+                    $speed = ($medicion->getSpeedDownload() + $medicion->getSpeedUpload())/2;
+                }
+                $promedio += $speed;
+                $count++;
+            }
+        }
+        if($count === 0){
+            $promedio = 0;
+            $count = 1;
+        }
+        if($humanize){
+            return $medicion->humanize($promedio/$count).'/seg';
+        }
+        return $medicion->humanize($promedio/$count,false);//byte/seg
+    }
+    
     public function __toString() {
         return $this->getNombre();
     }

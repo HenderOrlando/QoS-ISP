@@ -177,21 +177,13 @@ class Paquete extends Objeto
             $this->path = $filename.'.'.$this->getFile()->guessExtension();
             
             $size = $this->getFile()->getSize();
-            $unid = 'byte';
-            if($size > 1024){
-                $size = $size/1024;//Convertido a Kb
-                $unid = 'Kb';
-                if($size > 1024){
-                    $size = $size/1024;//Convertido a Mb
-                    $unid = 'Mb';
-                    if($size > 1024){
-                        $unid = 'Gb';
-                        $size = $size/1024;//Convertido a Gb
-                    }
-                }
-            }
-            $this->tam = $size;
-            $this->unidadTam = $unid;
+            $units = array('bytes', 'KB', 'MB', 'GB', 'TB', 'PB');
+            $ord = floor(log($size) / log(1024));
+            $ord = min(max(0, $ord), count($units) - 1);
+            $s = round(($size / pow(1024, $ord)) * 100) / 100;
+            
+            $this->tam = $s;
+            $this->unidadTam = $units[$ord];
         }
     }
 

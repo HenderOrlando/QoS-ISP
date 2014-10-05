@@ -50,11 +50,19 @@
                 </div>
                 <div class="col-xs-8 col-sm-8 col-xs-offset-4 col-sm-offset-4 col-md-9 col-md-offset-3 main">
                     {% block rowMain %}
-                        {{- include ('QoSAdminBundle:Secured:_rowMain.html.twig',{
-                            rowMain: {
-                                'name': 'resultados',
-                            }
-                        }) -}}
+                        {% if rowMains is defined %}
+                            {% for rm in rowMains %}
+                                {{- include ('QoSAdminBundle:Secured:_rowMain.html.twig',{
+                                    rowMain: rm
+                                }) -}}
+                            {% endfor %}
+                        {% else %}
+                            {{- include ('QoSAdminBundle:Secured:_rowMain.html.twig',{
+                                rowMain: {
+                                    'name': 'resultados',
+                                }
+                            }) -}}
+                        {% endif %}
                     {% endblock rowMain %}
                 </div>
             {% endblock rowContainer %}
@@ -93,36 +101,20 @@
     {% block dataGrafico %}
         <script type="text/javascript">
             var dataGraf = [];
-            {% if rowMain.datosGrafico is defined %}
-                {% for dg in rowMain.datosGrafico %}
-                    dataGraf['{{-rowMain.name-}}'] = JSON.parse('{' +
-                        'value:{{-dg.value-}},' +
-                        'color:'+getColor("{{-loop.index-}}", true)+',' +
-                        'highlight:'+getColor("{{-loop.index-}}") + ',' +
-                        'label:"{{-dg.label-}}"' +
-                    '}');
+            {% if datosGrafico is defined and datosGrafico is not empty %}
+                {% for dg in datosGrafico if dg.name is defined %}
+                    dataGraf['{{-dg.name-}}'] = [];
+                    {% for i, val in dg.values %}
+                        dataGraf['{{-dg.name-}}']["{{-i-}}"] = JSON.parse('{' +
+                            '"value":{{-val.value-}},' +
+                            '"color":"'+getColor("{{-i-}}", true)+'",' +
+                            '"highlight":"'+getColor("{{-i-}}") + '",' +
+                            '"label":"{{-val.label-}}"' +
+                        '}');
+                    {% else %}
+                        console.log('sin datos');
+                    {% endfor %}
                 {% endfor %}
-            {% else %}
-                dataGraf['resultados'] = [
-                    {
-                        value: 300,
-                        color:getColor(0, true),
-                        highlight: getColor(0),
-                        label: "Red Oto"
-                    },
-                    {
-                        value: 50,
-                        color:getColor(1, true),
-                        highlight: getColor(1),
-                        label: "Green A"
-                    },
-                    {
-                        value: 100,
-                        color:getColor(2, true),
-                        highlight: getColor(2),
-                        label: "Yellow B"
-                    }
-                ];
             {% endif %}
         </script>
     {% endblock dataGrafico %}
