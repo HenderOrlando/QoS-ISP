@@ -29,7 +29,7 @@ class Paquete extends Objeto
     private $configuracion;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=false)
      */
     protected $path;
     
@@ -94,6 +94,30 @@ class Paquete extends Objeto
 //
 //        return $this;
 //    }
+
+    /**
+     * Get path
+     *
+     * @return string 
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * Set path
+     *
+     * @return string 
+     */
+    public function setPath($path)
+    {
+        
+//        if(strstr('http://', $path) !== FALSE || strstr('https://', $path) !== false){// (FTP|DNS|DHCP|HTTP|HTTPS|POP|SMTP|SSH|TELNET|TFTP|LDAP|XMPP)
+            $this->path = $path;
+//        }
+        return $this;
+    }
 
     /**
      * Get unidadTam
@@ -176,7 +200,23 @@ class Paquete extends Objeto
             $filename = sha1(uniqid(mt_rand(), true));
             $this->path = $filename.'.'.$this->getFile()->guessExtension();
             
-            $size = $this->getFile()->getSize();
+            $size = 0;
+            if($this->getFile()){
+                $size = $this->getFile()->getSize();
+            }else{
+                $type       = "\x08";
+                $code       = "\x00";
+                $checksum   = "\x7d\x4b";
+                $identifier = "\x00\x00";
+                $seqNumber  = "\x00\x00";
+                $data       = "PingQoSISP";
+
+                $package  = $type.$code.$checksum.$identifier.$seqNumber.$data;
+                $size = mb_strlen($package, '8bit');
+            }
+            if($size === false){
+                $size = 1;
+            }
             $units = array('bytes', 'KB', 'MB', 'GB', 'TB', 'PB');
             $ord = floor(log($size) / log(1024));
             $ord = min(max(0, $ord), count($units) - 1);
@@ -268,6 +308,49 @@ class Paquete extends Objeto
             return $array;
         }
         return json_encode($array);
+    }
+    
+    function ping($host, $timeout = 1) {
+        /* ICMP ping de paquete con un checksum pre-calculado */
+        // Crea el paquete
+        $type       = "\x08";
+        $code       = "\x00";
+        $checksum   = "\x7d\x4b";
+        $identifier = "\x00\x00";
+        $seqNumber  = "\x00\x00";
+        $data       = "PingQoSISP";
+
+        $package  = $type.$code.$checksum.$identifier.$seqNumber.$data;
+//        $checksum = $this->icmpChecksum($package);//Calcula el checksum
+//        $package = $type.$code.$checksum.$identifier.$seqNumber.$data;
+        
+        $socket = socket_create(AF_INET, SOCK_RAW, 1);
+        socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => $timeout, 'usec' => 0));
+        socket_connect($socket, $host, null);
+
+        $ts = microtime(true);
+        socket_send($socket, $package, strLen($package), 0);
+        if (socket_read($socket, 255)){
+            $result = round(microtime(true) - $ts, 4);
+        }
+        else{
+            $result = false;
+        }
+        socket_close($socket);
+
+        return $result;
+    }
+    function icmpChecksum($data){
+       if (strlen($data)%2)
+           $data .= "\x00";
+
+       $bit = unpack('n*', $data);
+       $sum = array_sum($bit);
+
+       while ($sum >> 16)
+           $sum = ($sum >> 16) + ($sum & 0xffff);
+
+       return pack('n*', ~$sum);
     }
 
 }

@@ -158,11 +158,38 @@ class PaqueteController extends Controller
             $editForm = $this->createEditForm($entity, $user);
             $deleteForm = $this->createDeleteForm($id, $user);
         }
-
+        $datosGrafico = $this->getDatosGrafico(null, $entity);
+        $rowMains = array();
+        foreach($datosGrafico as $name => $dt){
+            $rowMains[] = array(
+                'name'  =>  $name,
+                'table' =>  $this->renderView('QoSAdminBundle:Secured:_table.html.twig', array(
+                    'theads' => array(
+                            array(
+                                'tds' => array(
+                                    array(
+                                        'val' => 'Nombre de la Institución'
+                                    ),
+                                    array(
+                                        'val' => 'Total de Mediciones'
+                                    ),
+                                    array(
+                                        'val' => "Mediciones con el Paquete"
+                                    ),
+                                ),
+                            ),
+                        ),
+                    'tbodys' => $this->getTBodys('uso-paquete', $entity),
+                    )
+                )
+            );
+        }
         return array(
             'entity'        =>  $entity,
             'delete_form'   =>  $deleteForm->createView(),
             'form'          =>  $editForm->createView(),
+            'rowMains'      => $rowMains,
+            'datosGrafico'  => $datosGrafico,
         );
     }
 
@@ -300,32 +327,60 @@ class PaqueteController extends Controller
         return $this->getDoctrine()->getManager()->getRepository('QoSMedicionesBundle:Paquete');
     }
     
-    public function getDatosGrafico($datos = null) {
+    public function getDatosGrafico($datos = null, Paquete $paquete = null) {
         $em = $this->getDoctrine()->getManager();
         
-        $paquetes = $this->getRepository()->findAll();
         if(is_null($datos)){
             $datos = array();
         }
-        $datos['Uso-de-paquetes'] = array();
-        foreach($paquetes as $paquete){
-            $datos['Uso-de-paquetes']['name'] = 'Uso-de-paquetes';
-            $datos['Uso-de-paquetes']['values'][] = array(
+        if(is_null($paquete)){
+            $datos['Uso-paquetes'] = array();
+            $paquetes = $this->getRepository()->findAll();
+            foreach($paquetes as $paquete){
+                $datos['Uso-paquetes']['name'] = 'Uso-paquetes';
+                $datos['Uso-paquetes']['values'][] = array(
+                    'label' => $paquete->getNombre(),
+                    'value' => $paquete->getConfiguracion()->count(),
+                );
+            }
+        }else{
+            $datos['Uso-'.$paquete->getCanonical()] = array();
+            $datos['Uso-'.$paquete->getCanonical()]['name'] = 'Uso-'.$paquete->getCanonical();
+            $datos['Uso-'.$paquete->getCanonical()]['values'][] = array(
                 'label' => $paquete->getNombre(),
                 'value' => $paquete->getConfiguracion()->count(),
             );
-            
         }
         return $datos;
     }
     
-    public function getTBodys($name) {
+    public function getTBodys($name, $paquete = null) {
         $em = $this->getDoctrine()->getManager();
-        
         $tbodys = array();
         switch($name){
-            case 'Uso-de-paquetes':
-                foreach($this->getRepository()->findAll() as $paquete){
+            case 'uso-paquete':
+            case 'Uso-paquetes':
+                if(is_null($paquete)){
+                    foreach($this->getRepository()->findAll() as $paquete){
+                        $mediciones = '';
+                        foreach($paquete->getConfiguracion() as $medicion){
+                            $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicion->getId()), true);
+                            $nombre = $medicion->getNombre();
+                            $mediciones = "<a href=\"$url\">$nombre</a>;";
+                        }
+                        $tbodys[]['tds'] = array(
+                            array(
+                                'val' => '<a href="'.$this->generateUrl('Paquete_show', array('id' => $paquete->getId())).'">'.$paquete->getNombre().'</a>'
+                            ),
+                            array(
+                                'val' => $paquete->getConfiguracion()->count()
+                            ),
+                            array(
+                                'val' => $mediciones
+                            ),
+                        );
+                    }
+                }else{
                     $mediciones = '';
                     foreach($paquete->getConfiguracion() as $medicion){
                         $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicion->getId()), true);
@@ -343,7 +398,6 @@ class PaqueteController extends Controller
                             'val' => $mediciones
                         ),
                     );
-
                 }
                 break;
         }

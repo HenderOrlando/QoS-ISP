@@ -33,12 +33,12 @@ class UsuarioRepository extends EntityRepository implements UserProviderInterfac
             $user = $q->getSingleResult();
         } catch (NoResultException $e) {
             $message = sprintf(
-                'Unable to find an active "'.$username.'"UserBundle:User object identified by "%s".',
+                'Unable to find an active "'.$username.'" UserBundle:User object identified by "%s".',
                 $username
             );
-            throw new UsernameNotFoundException($message, null, 0, $e);
+            throw new UsernameNotFoundException($message, 0, $e);
         }
-
+        
         return $user;
     }
     
@@ -61,7 +61,7 @@ class UsuarioRepository extends EntityRepository implements UserProviderInterfac
                 'Unable to find an active admin UserBundle:User object identified by "%s".',
                 $text
             );
-            throw new UsernameNotFoundException($message, null, 0, $e);
+            throw new UsernameNotFoundException($message, 0, $e);
         }
 
         return $user;

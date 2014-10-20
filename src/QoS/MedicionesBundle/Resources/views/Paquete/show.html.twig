@@ -21,6 +21,11 @@
                             {{ form_row(form.file) }}
                         </div>
                     </li>
+                    <li>
+                        <div class="form-group">
+                            {{ form_row(form.path) }}
+                        </div>
+                    </li>
                     <li class="border-t border-b title text-center">
                         {{- form_row(form.submit,{ 'attr': {'class': 'btn btn-lg btn-primary btn-block border-radius-none'} }) -}}
                     </li>
@@ -39,7 +44,7 @@
                 <ul class="nav nav-sidebar">
                     <li class="border-t border-b title text-center">
                         <a href="{{ path('Institucion') }}" class="btn btn-lg btn-default border-radius-none btn-block">
-                            Volver a lista de Instituciones
+                            Volver a lista de Paquetes
                         </a>
                     </li>
                 </ul>
@@ -77,6 +82,33 @@
     {% endif %}
 {% endblock rowSideBar %}
     
-{#% block rowMain %}
-    
-{% endblock rowMain %#}
+{% block rowMain %}
+    {% if rowMains is defined %}
+        {% for rm in rowMains %}
+            {{- include ('QoSAdminBundle:Secured:_rowMain.html.twig',{
+                rowMain: rm
+            }) -}}
+        {% endfor %}
+    {% endif %}
+{% endblock rowMain %}
+
+{% block dataGrafico %}
+    <script type="text/javascript">
+        var dataGraf = [];
+        {% if datosGrafico is defined and datosGrafico is not empty %}
+            {% for dg in datosGrafico if dg.name is defined %}
+                dataGraf['{{-dg.name-}}'] = [];
+                {% for i, val in dg.values %}
+                    dataGraf['{{-dg.name-}}']["{{-i-}}"] = JSON.parse('{' +
+                        '"value":{{-val.value-}},' +
+                        '"color":"'+getColor("{{-i-}}", true)+'",' +
+                        '"highlight":"'+getColor("{{-i-}}") + '",' +
+                        '"label":"{{-val.label-}}"' +
+                    '}');
+                {% else %}
+                    console.log('sin datos');
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+    </script>
+{% endblock dataGrafico %}

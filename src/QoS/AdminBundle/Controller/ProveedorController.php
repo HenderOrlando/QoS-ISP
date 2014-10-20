@@ -47,14 +47,14 @@ class ProveedorController extends Controller
                                         'val' => 'Número total de Mediciones'
                                     ),
                                     array(
-                                        'val' => "Mediciones del Proveedor (Medición Esperada) <a href=\""
-                                        .$this->generateUrl('medicionproveedor_new')
-                                        ."\" class=\"label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
+                                        'val' => "Mediciones del Proveedor (Medición Esperada) "
+//                                        <a href=\"".$this->generateUrl('medicionproveedor_new')
+//                                        ."\" class=\"label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
                                     ),
                                     array(
-                                        'val' => "Mediciones al Proveedor (en Instituciones) <a href=\""
-                                        .$this->generateUrl('medicioninstitucion_new')
-                                        ."\" class=\"label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
+                                        'val' => "Mediciones al Proveedor (en Instituciones) "
+//                                        <a href=\"".$this->generateUrl('medicioninstitucion_new')
+//                                        ."\" class=\"label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
                                     ),
                                 ),
                             ),
@@ -116,7 +116,7 @@ class ProveedorController extends Controller
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Create'));
+        $form->add('submit', 'submit', array('label' => 'Crear'));
 
         return $form;
     }
@@ -157,7 +157,7 @@ class ProveedorController extends Controller
         if (!$entity) {
             throw $this->createNotFoundException("Paquete \"$id\" no encontrado.");
         }
-
+        
         $id = $entity->getId();
         $deleteForm = null;
         $editForm = null;
@@ -165,11 +165,47 @@ class ProveedorController extends Controller
             $editForm = $this->createEditForm($entity, $user);
             $deleteForm = $this->createDeleteForm($id, $user);
         }
+        
+        $datosGrafico = $this->getDatosGrafico(null, $entity);
+        $rowMains = array();
+        foreach($datosGrafico as $name => $dt){
+            $rowMains[] = array(
+                'name'  =>  $name,
+                'table' =>  $this->renderView('QoSAdminBundle:Secured:_table.html.twig', array(
+                    'theads' => array(
+                            array(
+                                'tds' => array(
+                                    array(
+                                        'val' => 'Nombre del Proveedor'
+                                    ),
+                                    array(
+                                        'val' => 'Número total de Mediciones'
+                                    ),
+                                    array(
+                                        'val' => "Mediciones del Proveedor (Medición Esperada) "
+//                                        <a href=\"".$this->generateUrl('medicionproveedor_new')
+//                                        ."\" class=\"label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
+                                    ),
+                                    array(
+                                        'val' => "Mediciones al Proveedor (en Instituciones) "
+//                                        <a href=\"".$this->generateUrl('medicioninstitucion_new')
+//                                        ."\" class=\"label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
+                                    ),
+                                ),
+                            ),
+                        ),
+                    'tbodys' => $this->getTBodys('mediciones-proveedor', $entity),
+                    )
+                )
+            );
+        }
 
         return array(
             'entity'        =>  $entity,
             'delete_form'   =>  $deleteForm->createView(),
             'form'          =>  $editForm->createView(),
+            'rowMains'      =>  $rowMains,
+            'datosGrafico'  =>  $datosGrafico,
         );
     }
 
@@ -308,17 +344,26 @@ class ProveedorController extends Controller
         return $this->getDoctrine()->getManager()->getRepository('QoSAdminBundle:Proveedor');
     }
 
-    public function getDatosGrafico($datos = null) {
+    public function getDatosGrafico($datos = null, $proveedor = null) {
         $em = $this->getDoctrine()->getManager();
         
         $proveedores = $this->getRepository()->findAll();
         if(is_null($datos)){
             $datos = array();
         }
-        $datos['mediciones-proveedores'] = array();
-        foreach($proveedores as $proveedor){
-            $datos['mediciones-proveedores']['name'] = 'mediciones-proveedores';
-            $datos['mediciones-proveedores']['values'][] = array(
+        if(is_null($proveedor)){
+            $datos['mediciones-proveedores'] = array();
+            foreach($proveedores as $proveedor){
+                $datos['mediciones-proveedores']['name'] = 'mediciones-proveedores';
+                $datos['mediciones-proveedores']['values'][] = array(
+                    'label' => $proveedor->getNombre(),
+                    'value' => $proveedor->getMedicionesInstitucion()->count(),
+                );
+            }
+        }else{
+            $datos['mediciones-'.$proveedor->getCanonical()] = array();
+            $datos['mediciones-'.$proveedor->getCanonical()]['name'] = 'mediciones-'.$proveedor->getCanonical();
+            $datos['mediciones-'.$proveedor->getCanonical()]['values'][] = array(
                 'label' => $proveedor->getNombre(),
                 'value' => $proveedor->getMedicionesInstitucion()->count(),
             );
@@ -327,25 +372,60 @@ class ProveedorController extends Controller
         return $datos;
     }
 
-    public function getTBodys($name) {
+    public function getTBodys($name, $proveedor = null) {
         $em = $this->getDoctrine()->getManager();
         
         $tbodys = array();
         switch($name){
+            case 'mediciones-proveedor':
             case 'mediciones-proveedores':
-                $proveedores = $this->getRepository()->findAll();
-                foreach($proveedores as $proveedor){
+                if(is_null($proveedor)){
+                    $proveedores = $this->getRepository()->findAll();
+                    foreach($proveedores as $proveedor){
+                        $medicionesProveedor = '';
+                        $medicionesInstitucion = '';
+                        foreach($proveedor->getMedicionesInstitucion() as $medicionInstitucion){
+                            $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
+                            $nombre = $medicionInstitucion->getNombre(true);
+                            $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
+                        }
+                        foreach($proveedor->getMedicionesProveedor() as $medicionProveedor){
+                            $url = $this->generateUrl('medicionproveedor_show', array('id'=>$medicionProveedor->getId()), true);
+                            $nombre = $medicionProveedor->getNombre(true);
+                            $medicionesProveedor .= "<a href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
+                        }
+                        $numMP = $proveedor->getMedicionesProveedor()->count();
+                        $pluralMP = $numMP == 1?'ón':'ones';
+                        $numMI = $proveedor->getMedicionesInstitucion()->count();
+                        $pluralMI = $numMI == 1?'ón':'ones';
+                        $tbodys[]['tds'] = array(
+                            array(
+    //                            'val' => $proveedor->getNombre()
+                                'val' => '<a href="'.$this->generateUrl('Proveedor_show', array('id' => $proveedor->getId())).'">'.$proveedor->getNombre().'</a>'
+                            ),
+                            array(
+                                'val' => "$numMI medici$pluralMI en Instituciones <br/> $numMP medici$pluralMP base del servicio del proveedor"
+                            ),
+                            array(
+                                'val' => $medicionesProveedor
+                            ),
+                            array(
+                                'val' => $medicionesInstitucion
+                            ),
+                        );
+                    }
+                }else{
                     $medicionesProveedor = '';
                     $medicionesInstitucion = '';
                     foreach($proveedor->getMedicionesInstitucion() as $medicionInstitucion){
                         $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
                         $nombre = $medicionInstitucion->getNombre(true);
-                        $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";
+                        $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
                     }
                     foreach($proveedor->getMedicionesProveedor() as $medicionProveedor){
                         $url = $this->generateUrl('medicionproveedor_show', array('id'=>$medicionProveedor->getId()), true);
                         $nombre = $medicionProveedor->getNombre(true);
-                        $medicionesProveedor .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";
+                        $medicionesProveedor .= "<a href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
                     }
                     $numMP = $proveedor->getMedicionesProveedor()->count();
                     $pluralMP = $numMP == 1?'ón':'ones';
@@ -366,7 +446,6 @@ class ProveedorController extends Controller
                             'val' => $medicionesInstitucion
                         ),
                     );
-
                 }
                 break;
         }

@@ -162,10 +162,39 @@ class UsuarioController extends Controller
             $deleteForm = $this->createDeleteForm($id, $user);
         }
 
+        $datosGrafico = $this->getDatosGrafico(null, $entity);
+        $rowMains = array();
+        foreach($datosGrafico as $name => $dt){
+            $rowMains[] = array(
+                'name'  =>  $name,
+                'table' =>  $this->renderView('QoSAdminBundle:Secured:_table.html.twig', array(
+                    'theads' => array(
+                            array(
+                                'tds' => array(
+                                    array(
+                                        'val' => 'Nombre del Usuario'
+                                    ),
+                                    array(
+                                        'val' => 'Número de Mediciones'
+                                    ),
+                                    array(
+                                        'val' => 'Mediciones'
+                                    ),
+                                ),
+                            ),
+                        ),
+                    'tbodys' => $this->getTBodys('mediciones-usuario',$entity),
+                    )
+                )
+            );
+        }
+        
         return array(
             'entity'        =>  $entity,
             'delete_form'   =>  $deleteForm->createView(),
             'form'          =>  $editForm->createView(),
+            'rowMains'      => $rowMains,
+            'datosGrafico'  => $datosGrafico,
         );
     }
 
@@ -323,26 +352,35 @@ class UsuarioController extends Controller
         return $this->getDoctrine()->getManager()->getRepository('QoSAdminBundle:Usuario');
     }
 
-    public function getDatosGrafico($datos = null) {
+    public function getDatosGrafico($datos = null, Usuario $usuario = null) {
         $em = $this->getDoctrine()->getManager();
         
         $roles = $em->getRepository('QoSAdminBundle:Rol')->findAll();
         if(is_null($datos)){
             $datos = array();
         }
-        $datos['roles-usuarios'] = array();
-        foreach($roles as $rol){
-            $datos['roles-usuarios']['name'] = 'roles-usuarios';
-            $datos['roles-usuarios']['values'][] = array(
-                'label' => "Rol ".$rol->getNombre(),
-                'value' => $rol->getUsuario()->count(),
+        if(is_null($usuario)){
+            $datos['roles-usuarios'] = array();
+            foreach($roles as $rol){
+                $datos['roles-usuarios']['name'] = 'roles-usuarios';
+                $datos['roles-usuarios']['values'][] = array(
+                    'label' => "Rol ".$rol->getNombre(),
+                    'value' => $rol->getUsuario()->count(),
+                );
+
+            }
+        }else{
+            $datos['mediciones-'.$usuario->getUsernamecanonical()] = array();
+            $datos['mediciones-'.$usuario->getUsernamecanonical()]['name'] = 'mediciones-'.$usuario->getUsernamecanonical();
+            $datos['mediciones-'.$usuario->getUsernamecanonical()]['values'][] = array(
+                'label' => $usuario->getEmail(),
+                'value' => $usuario->getMedicionesInstitucion()->count(),
             );
-            
         }
         return $datos;
     }
 
-    public function getTBodys($name) {
+    public function getTBodys($name, Usuario $usuario = null) {
         $em = $this->getDoctrine()->getManager();
         
         $tbodys = array();
@@ -358,8 +396,8 @@ class UsuarioController extends Controller
                     }
                     $tbodys[]['tds'] = array(
                         array(
-//                            'val' => $rol->getNombre()
-                            'val' => '<a href="'.$this->generateUrl('Rol_show', array('id' => $rol->getId())).'">'.$rol->getNombre().'</a>'
+                            'val' => $rol->getNombre()
+//                            'val' => '<a href="'.$this->generateUrl('Rol_show', array('id' => $rol->getId())).'">'.$rol->getNombre().'</a>'
                         ),
                         array(
                             'val' => $rol->getUsuario()->count()
@@ -369,6 +407,70 @@ class UsuarioController extends Controller
                         ),
                     );
 
+                }
+                break;
+            case 'mediciones-usuario':
+            case 'mediciones-usuarios':
+                if(is_null($usuario)){
+                    $usuarios = $this->getRepository()->findAll();
+                    foreach($usuarios as $usuario){
+                        $medicionesUsuario = '';
+                        $medicionesInstitucion = '';
+                        foreach($usuario->getMedicionesInstitucion() as $medicionInstitucion){
+                            $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
+                            $nombre = $medicionInstitucion->getNombre(true);
+                            $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
+//                            $medicionesInstitucion .= $nombre;
+                        }
+                        foreach($usuario->getMedicionesUsuario() as $medicionUsuario){
+                            $url = $this->generateUrl('medicionusuario_show', array('id'=>$medicionUsuario->getId()), true);
+                            $nombre = $medicionUsuario->getNombre(true);
+                            $medicionesUsuario .= "<a href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
+                        }
+                        $numMP = $usuario->getMedicionesUsuario()->count();
+                        $pluralMP = $numMP == 1?'ón':'ones';
+                        $numMI = $usuario->getMedicionesInstitucion()->count();
+                        $pluralMI = $numMI == 1?'ón':'ones';
+                        $tbodys[]['tds'] = array(
+                            array(
+    //                            'val' => $usuario->getNombre()
+                                'val' => '<a href="'.$this->generateUrl('Usuario_show', array('id' => $usuario->getId())).'">'.$usuario->getNombre().'</a>'
+                            ),
+                            array(
+                                'val' => "$numMI medici$pluralMI en Instituciones <br/> $numMP medici$pluralMP base del servicio del usuario"
+                            ),
+                            array(
+                                'val' => $medicionesUsuario
+                            ),
+                            array(
+                                'val' => $medicionesInstitucion
+                            ),
+                        );
+                    }
+                }else{
+                    $medicionesUsuario = '';
+                    $medicionesInstitucion = '<ul class="list-unstyled">';
+                    foreach($usuario->getMedicionesInstitucion() as $medicionInstitucion){
+                        $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
+                        $nombre = $medicionInstitucion->getNombre(true);
+//                        $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
+                        $medicionesInstitucion .= "<li>$nombre;</li> ";
+                    }
+                    $medicionesInstitucion .= '</ul>';
+                    $numMI = $usuario->getMedicionesInstitucion()->count();
+                    $pluralMI = $numMI == 1?'ón':'ones';
+                    $tbodys[]['tds'] = array(
+                        array(
+//                            'val' => $usuario->getNombre()
+                            'val' => '<a href="'.$this->generateUrl('Usuario_show', array('id' => $usuario->getId())).'">'.$usuario->getEmail().'</a>'
+                        ),
+                        array(
+                            'val' => $usuario->getMedicionesInstitucion()->count()
+                        ),
+                        array(
+                            'val' => $medicionesInstitucion
+                        ),
+                    );
                 }
                 break;
         }

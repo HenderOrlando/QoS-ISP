@@ -35,6 +35,16 @@ class PaqueteType extends AbstractType
                     'placeholder'   =>  'Archivo a cargar',
                 ),
             ))
+            ->add('path', null, array(
+                'label'     =>  'Url del Archivo',
+                'label_attr'=>  array(
+                    'class' =>  'sr-only',
+                ),
+                'attr'      =>  array(
+                    'class'         =>  'form-control input-lg',
+                    'placeholder'   =>  'Url del Archivo',
+                ),
+            ))
         ;
     }
     

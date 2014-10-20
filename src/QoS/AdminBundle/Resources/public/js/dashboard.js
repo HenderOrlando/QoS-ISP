@@ -10,6 +10,7 @@ var states = [],
     infinito = false,
     interval = null,
     xhr = 0,
+    charts = {},
     map = {};
 $(function(){
     $('.graphic-content').find('canvas').each(function(){
@@ -29,9 +30,11 @@ $(function(){
                 var ctx = el.getContext("2d"),
                     chart = null;
                 $('#select-graph-'+name).on('change', function(){
-                    var type = $(this).find('input[name="option-graph"]:checked').val();
-                    if(chart){
-                        chart.destroy();
+                    var parent = $(this).closest('.graphic-content'),
+                        name = parent.find('canvas').attr('id').replace('grafico-',''), 
+                        type = $(this).find('input[name="option-graph"]:checked').val();
+                    if(charts[name]){
+                        charts[name].destroy();
                     }
                     switch(type){
                         case 'pie':
@@ -44,14 +47,20 @@ $(function(){
                             chart = new Chart(ctx).Bar(getDataGraph(dataGraf[name], type),optsBar);
                             break;
                     }
+                    charts[name] = chart;
                 }).trigger('change');
                 $('#reload-grafico-'+name).on('click', function(e){
+                    var parent = $(this).closest('.graphic-content'),
+                        name = parent.find('canvas').attr('id').replace('grafico-','');
                     $('#select-graph-'+name).trigger('change');
                 });
                 legend(document.getElementById("legend-grafico-"+name),dataGraf[name]);
+                charts[name] = chart;
                 elj.on('mousemove', function(e){
-                    if(chart){
-                        var active = getDatasetEvent(e, chart);
+                    var parent = $(this).closest('.graphic-content'),
+                        name = parent.find('canvas').attr('id').replace('grafico-','');
+                    if(charts[name]){
+                        var active = getDatasetEvent(e, charts[name]);
                         if(active.length){
                             for(var j = 0; j < active.length; j++){
                                 var d = active[j],

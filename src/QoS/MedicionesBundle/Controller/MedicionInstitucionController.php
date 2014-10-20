@@ -445,4 +445,5 @@ class MedicionInstitucionController extends Controller
     private function getRepository(){
         return $this->getDoctrine()->getManager()->getRepository('QoSMedicionesBundle:MedicionInstitucion');
     }
+    
 }

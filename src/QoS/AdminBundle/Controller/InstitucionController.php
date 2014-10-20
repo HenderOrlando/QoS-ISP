@@ -158,11 +158,40 @@ class InstitucionController extends Controller
             $editForm = $this->createEditForm($entity, $user);
             $deleteForm = $this->createDeleteForm($id, $user);
         }
+        
+        $datosGrafico = $this->getDatosGrafico(null, $entity);
+        $rowMains = array();
+        foreach($datosGrafico as $name => $dt){
+            $rowMains[] = array(
+                'name'  =>  $name,
+                'table' =>  $this->renderView('QoSAdminBundle:Secured:_table.html.twig', array(
+                    'theads' => array(
+                            array(
+                                'tds' => array(
+                                    array(
+                                        'val' => 'Nombre de la Institución'
+                                    ),
+                                    array(
+                                        'val' => 'Número total de Mediciones'
+                                    ),
+                                    array(
+                                        'val' => "Mediciones del Servicio en la Institución"
+                                    ),
+                                ),
+                            ),
+                        ),
+                    'tbodys' => $this->getTBodys('mediciones-institucio', $entity),
+                    )
+                )
+            );
+        }
 
         return array(
             'entity'        =>  $entity,
             'delete_form'   =>  $deleteForm->createView(),
             'form'          =>  $editForm->createView(),
+            'rowMains'      => $rowMains,
+            'datosGrafico'  => $datosGrafico,
         );
     }
 
@@ -301,33 +330,66 @@ class InstitucionController extends Controller
         return $this->getDoctrine()->getManager()->getRepository('QoSAdminBundle:Institucion');
     }
 
-    public function getDatosGrafico($datos = null) {
+    public function getDatosGrafico($datos = null, $institucion = null) {
         $em = $this->getDoctrine()->getManager();
         
         $instituciones = $this->getRepository()->findAll();
         if(is_null($datos)){
             $datos = array();
         }
-        $datos['mediciones-instituciones'] = array();
-        foreach($instituciones as $institucion){
-            $datos['mediciones-instituciones']['name'] = 'mediciones-instituciones';
-            $datos['mediciones-instituciones']['values'][] = array(
+        if(is_null($institucion)){
+            $datos['mediciones-instituciones'] = array();
+            foreach($instituciones as $institucion){
+                $datos['mediciones-instituciones']['name'] = 'mediciones-instituciones';
+                $datos['mediciones-instituciones']['values'][] = array(
+                    'label' => $institucion->getNombre(),
+                    'value' => $institucion->getMediciones()->count(),
+                );
+            }
+        }else{
+            $datos['mediciones-'.$institucion->getCanonical()] = array();
+            $datos['mediciones-'.$institucion->getCanonical()]['name'] = 'mediciones-'.$institucion->getCanonical();
+            $datos['mediciones-'.$institucion->getCanonical()]['values'][] = array(
                 'label' => $institucion->getNombre(),
                 'value' => $institucion->getMediciones()->count(),
             );
-            
         }
         return $datos;
     }
 
-    public function getTBodys($name) {
+    public function getTBodys($name, $institucion = null) {
         $em = $this->getDoctrine()->getManager();
         
         $tbodys = array();
         switch($name){
+            case 'mediciones-institucio':
             case 'mediciones-instituciones':
-                $instituciones = $this->getRepository()->findAll();
-                foreach($instituciones as $institucion){
+                if(is_null($institucion)){
+                    $instituciones = $this->getRepository()->findAll();
+                    foreach($instituciones as $institucion){
+                        $medicionesInstitucion = '';
+                        $medicionesInstitucion = '';
+                        foreach($institucion->getMediciones() as $medicionInstitucion){
+                            $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
+                            $nombre = $medicionInstitucion->getNombre(true);
+                            $medicionesInstitucion = "<a href=\"$url\">$nombre</a>;";
+                        }
+                        $numMI = $institucion->getMediciones()->count();
+                        $pluralMI = $numMI == 1?'ón':'ones';
+                        $tbodys[]['tds'] = array(
+                            array(
+    //                            'val' => $institucion->getNombre()
+                                'val' => '<a href="'.$this->generateUrl('Institucion_show', array('id' => $institucion->getId())).'">'.$institucion->getNombre().'</a>'
+                            ),
+                            array(
+                                'val' => "$numMI medici$pluralMI en la Institución"
+                            ),
+                            array(
+                                'val' => $medicionesInstitucion
+                            ),
+                        );
+                    }
+                }else{
                     $medicionesInstitucion = '';
                     $medicionesInstitucion = '';
                     foreach($institucion->getMediciones() as $medicionInstitucion){
@@ -349,7 +411,6 @@ class InstitucionController extends Controller
                             'val' => $medicionesInstitucion
                         ),
                     );
-
                 }
                 break;
         }
