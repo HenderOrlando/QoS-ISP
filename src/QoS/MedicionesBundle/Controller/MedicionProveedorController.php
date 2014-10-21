@@ -106,7 +106,7 @@ class MedicionProveedorController extends Controller
                 $pa->setActual(false);
                 $em->persist($pa);
             }
-//            $entity->setActual(true);
+            $entity->setActual(true);
             $em->persist($entity);
             $em->flush();
 

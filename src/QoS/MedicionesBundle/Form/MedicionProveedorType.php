@@ -17,17 +17,17 @@ class MedicionProveedorType extends AbstractType
         $transformerProveedor = new DataTransformer\ProveedorTransformer($options['em']);
         $transformerUsuario= new DataTransformer\UsuarioTransformer($options['em']);
         $builder
-            ->add('actual', null, array(
-                'label' => 'Usar como actual?',
-                'required' => false,
-                'label_attr'=>  array(
-//                    'class' =>  'sr-only',
-                ),
-                'attr'      =>  array(
-                    'class'         =>  '',
-                    'placeholder'   =>  'Usar como actual?',
-                ),
-            ))
+//            ->add('actual', null, array(
+//                'label' => 'Usar como actual?',
+//                'required' => false,
+//                'label_attr'=>  array(
+////                    'class' =>  'sr-only',
+//                ),
+//                'attr'      =>  array(
+//                    'class'         =>  '',
+//                    'placeholder'   =>  'Usar como actual?',
+//                ),
+//            ))
             ->add('speedUpload', null, array(
                 'label' => 'Velocidad de Subida (bytes)',
                 'label_attr'=>  array(
