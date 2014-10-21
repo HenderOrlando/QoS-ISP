@@ -98,6 +98,15 @@ class MedicionProveedorController extends Controller
 
         if ($form->isValid()) {
             $em = $this->getDoctrine()->getManager();
+            $proveedoresActuales = $this->getDoctrine()->getManager()->getRepository('QoSMedicionesBundle:MedicionProveedor')->findBy(array(
+                'actual'    =>  true,
+                'proveedor' =>  $entity->getProveedor()->getId(),
+            ));
+            foreach($proveedoresActuales as $pa){
+                $pa->setActual(false);
+                $em->persist($pa);
+            }
+//            $entity->setActual(true);
             $em->persist($entity);
             $em->flush();
 

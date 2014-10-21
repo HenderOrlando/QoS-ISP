@@ -28,8 +28,8 @@
                 {% endif %}
                 {% if is_granted('ROLE_ADMIN') %}
                     <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Paquete') }}">Paquetes</a></li>
-                    <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Institucion') }}">Instituciones</a></li>
                     <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Proveedor') }}">Proveedores</a></li>
+                    <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Institucion') }}">Instituciones</a></li>
                 {% endif %}
                 {% if is_granted('ROLE_PROVEEDOR') %}
                 {% endif %}
