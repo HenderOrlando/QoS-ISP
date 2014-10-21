@@ -299,7 +299,7 @@ class MedicionInstitucionController extends Controller
      * @Method("GET")
      * @Template()
      */
-    public function showAction($id)
+    public function showAction(Request $request, $id)
     {
         $em = $this->getDoctrine()->getManager();
 
@@ -310,11 +310,17 @@ class MedicionInstitucionController extends Controller
         }
 
         $deleteForm = $this->createDeleteForm($id);
-
-        return array(
+        $data = array(
             'entity'      => $entity,
-            'delete_form' => $deleteForm->createView(),
+//            'delete_form' => $deleteForm->createView(),
         );
+        if($request->isXmlHttpRequest()){
+            return \Symfony\Component\HttpFoundation\JsonResponse::create(array(
+                'title' => 'Medición del '.$entity->getFechaCreado('Y-m-d H:i:s'),
+                'body' => $this->renderView('QoSMedicionesBundle:MedicionInstitucion:show.html.twig', $data),
+            ));
+        }
+        return $data;
     }
 
     /**

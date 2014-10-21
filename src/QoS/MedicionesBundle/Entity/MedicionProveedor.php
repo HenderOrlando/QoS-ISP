@@ -3,7 +3,7 @@ namespace QoS\MedicionesBundle\Entity;
 use Doctrine\ORM\Mapping AS ORM;
 
 /**
- * @ORM\Entity(repositoryClass="QoS\AdminBundle\Repository\MedicionProveedorRepository")
+ * @ORM\Entity(repositoryClass="QoS\MedicionesBundle\Repository\MedicionProveedorRepository")
  * @ORM\Table(name="medicionProveedor")
  */
 class MedicionProveedor
@@ -11,7 +11,7 @@ class MedicionProveedor
     /**
      * @ORM\Id
      * @ORM\Column(type="guid")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\GeneratedValue(strategy="UUID")
      */
     private $id;
 
@@ -135,6 +135,16 @@ class MedicionProveedor
     }
 
     /**
+     * is actual
+     *
+     * @return boolean 
+     */
+    public function isActual()
+    {
+        return $this->getActual();
+    }
+
+    /**
      * Set proveedor
      *
      * @param \QoS\AdminBundle\Entity\Proveedor $proveedor
@@ -198,9 +208,13 @@ class MedicionProveedor
      *
      * @return \DateTime 
      */
-    public function getFechaCreado()
+    public function getFechaCreado($formato = null)
     {
-        return $this->fechaCreado;
+        $fecha = $this->fechaCreado;
+        if(is_string($formato)){
+            $fecha = $fecha->format($formato);
+        }
+        return $fecha;
     }
     
     /**
@@ -212,25 +226,30 @@ class MedicionProveedor
     public function setVelocidad($velocidad)
     {
         $this->velocidad = $velocidad;
+        $size = $velocidad;
+        $unid = 'byte';
+        if($size > 1024){
+            $size = $size/1024;//Convertido a Kb
+            $unid = 'Kb';
+            if($size > 1024){
+                $size = $size/1024;//Convertido a Mb
+                $unid = 'Mb';
+                if($size > 1024){
+                    $unid = 'Gb';
+                    $size = $size/1024;//Convertido a Gb
+                }
+            }
+        }
+        $this->setUnidad($unid.'/seg');
 
         return $this;
-    }
-
-    /**
-     * Get velocidad
-     *
-     * @return float 
-     */
-    public function getVelocidad()
-    {
-        return $this->velocidad;
     }
     
     public function getNombre($short = false){
         if($short){
-            return 'Medición en la Institución '.$this->getInstitucion();
+            return 'Medición en el Proveedor '.$this->getProveedor();
         }
-        return 'Medición del Proveedor '.$this->getProveedor().' en la Institución '.$this->getInstitucion();
+        return 'Medición del Proveedor '.$this->getProveedor().' en el Proveedor '.$this->getProveedor();
     }
 
     /**
@@ -435,9 +454,13 @@ class MedicionProveedor
      *
      * @return float 
      */
-    public function getSpeedUpload()
+    public function getSpeedUpload($humanize = false)
     {
-        return $this->speedUpload;
+        $var = $this->speedUpload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
     }
 
     /**
@@ -458,9 +481,13 @@ class MedicionProveedor
      *
      * @return float 
      */
-    public function getSpeedDownload()
+    public function getSpeedDownload($humanize = false)
     {
-        return $this->speedDownload;
+        $var = $this->speedDownload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
     }
 
     /**
@@ -481,9 +508,13 @@ class MedicionProveedor
      *
      * @return float 
      */
-    public function getLengthUpload()
+    public function getLengthUpload($humanize = false)
     {
-        return $this->lengthUpload;
+        $var = $this->lengthUpload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
     }
 
     /**
@@ -504,8 +535,49 @@ class MedicionProveedor
      *
      * @return float 
      */
-    public function getLengthDownload()
+    public function getLengthDownload($humanize = false)
     {
-        return $this->lengthDownload;
+        $var = $this->lengthDownload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
+    }
+    
+    public function humanize($size, $units_ = true){
+        $units = array('bytes', 'KB', 'MB', 'GB', 'TB', 'PB');
+        $ord = floor(log($size) / log(1024));
+        $ord = min(max(0, $ord), count($units) - 1);
+        $s = round(($size / pow(1024, $ord)) * 100) / 100;
+        if($units_){
+            return $s.' '.$units[$ord];
+        }
+        return $s;
+    }
+    
+    public function json($returnArray = false){
+        $array = array(
+            'proveedor' => $this->getProveedor()->json(true),
+            'paquete' => $this->getPaquete()->json(true),
+            'usuario' => $this->getUsuario()->json(true),
+            'lengthDownload' => $this->getLengthDownload(),
+            'lengthUpload' => $this->getLengthUpload(),
+            'nombre' => $this->getNombre(true),
+            'nombreShort' => $this->getNombre(),
+            'timeTotal' => $this->getTimeTotal(),
+            'sizeUpload' => $this->getSizeUpload(),
+            'speedUpload' => $this->getSpeedUpload(),
+            'timeConnect' => $this->getTimeConnect(),
+            'sizeDownload' => $this->getSizeDownload(),
+            'timeRedirect' => $this->getTimeRedirect(),
+            'speedDownload' => $this->getSpeedDownload(),
+            'timeNamelookup' => $this->getTimeNameLookup(),
+            'timePretransfer' => $this->getTimePreTransfer(),
+            'timeStarttransfer' => $this->getTimeStartTransfer(),
+        );
+        if($returnArray){
+            return $array;
+        }
+        return json_encode($array);
     }
 }

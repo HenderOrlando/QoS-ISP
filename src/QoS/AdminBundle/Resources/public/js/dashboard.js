@@ -113,6 +113,13 @@ $(function(){
          infinito = false;
          clearInterval(interval);
      });
+    // open-modal
+     $(document).on('click','.open-modal',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var url = $(this).attr('href');
+        openModalAjax(url); 
+     });
     // ajax-form
     $('.ajax-form').on('submit', function(e){
         e.preventDefault();
@@ -129,7 +136,7 @@ $(function(){
             }
             if(data[d].name === "qos_medicionesbundle_medicioninstitucion[numPaquetes]"){
                 numPaq = parseInt(data[d].value);
-                if(numPaq === 0){
+                if(!numPaq || numPaq <= 0){
                     infinito = true;
                 }
             }
@@ -137,7 +144,14 @@ $(function(){
         sendAjax(url, data);
     });
     // Typeahead
-    $('.typeahead').each(function(){
+    activeTypeahead();
+});
+
+function activeTypeahead($typeahead){
+    if($.type($typeahead) === 'undefined'){
+        $typeahead = '.typeahead';
+    }
+    $($typeahead).each(function(){
         var este = $(this);
         
         $(this)
@@ -147,7 +161,7 @@ $(function(){
                 }
             })
             .typeahead({
-                minLength: 2,
+                minLength: 1,
                 source: function (query, process) {
 
                     var text = este.attr('placeholder'),
@@ -203,7 +217,65 @@ $(function(){
                 }
             });
     });
-});
+}
+
+function openModalAjax(url, data, method){
+    if($.type(method) === 'undefined'){
+        method = 'GET';
+    }
+    var $datos = {
+        url: url,
+        type: method,
+        cache: false,
+        beforeSend: function(jqXHR, settings){
+        }
+    };
+    if(data){
+        $datos.data = data;
+    }
+    xhr = $.ajax($datos).then(function(data, textStatus, jqXHR){
+        modal.find('#modal-body').children().remove();
+        if(data.body){
+            var body = modal.find('#modal-body');
+            body.append(data.body);
+            activeTypeahead(body.find('.typeahead'));
+            if(body.find('form')){
+                body.find('form').on('submit', function(e){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var url = $(this).attr('action'),
+                        dataA = $(this).serializeArray();
+                    ;
+                    var data = [];
+                    for(var d = 0; d < dataA.length; d++){
+                        data[d] = dataA[d];
+                        var val = $('[name="'+data[d].name+'"]').attr('data-val');
+                        if(val){
+                            data[d].value = val;
+                        }
+                    }
+                    openModalAjax(url, data, $(this).attr('method'));
+                });
+            }
+        }
+        if(data.title){
+            modal.find('#modal-title').text(data.title);
+        }
+        modal.find('.stop-medicion').hide();
+        modal.modal('show');
+    }, function(jqXHR, textStatus, errorThrown){
+        
+    }).always(function(){
+    });
+}
+
+function humanize(size) {
+    var units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    var ord = Math.floor(Math.log(size) / Math.log(1024));
+    ord = Math.min(Math.max(0, ord), units.length - 1);
+    var s = Math.round((size / Math.pow(1024, ord)) * 100) / 100;
+    return s + ' ' + units[ord];
+}
 
 function sendAjax(url, data){
     xhr = $.ajax({
@@ -220,25 +292,20 @@ function sendAjax(url, data){
         if(data.urlFile){
             sendFileAjax(url, $(data.form).serializeArray(), data.urlFile);
         }
+        modal.find('#modal-title').text('Midiendo')
         interval = setInterval(function(){
             modal.find('#modal-title').text(modal.find('#modal-title').text()+'.')
             if((modal.find('#modal-title').text().match(/\./g)||[]).length > 3){
-                modal.find('#modal-title').text('Midiendo')
+                modal.find('#modal-title').text('Midiendo');
             }
         }, 1000);
+        modal.find('.stop-medicion').show();
         modal.modal('show');
     }, function(jqXHR, textStatus, errorThrown){
         
     }).always(function(){
         
     });
-}
-function humanize(size) {
-    var units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
-    var ord = Math.floor(Math.log(size) / Math.log(1024));
-    ord = Math.min(Math.max(0, ord), units.length - 1);
-    var s = Math.round((size / Math.pow(1024, ord)) * 100) / 100;
-    return s + ' ' + units[ord];
 }
 
 function sendFileAjax(url, data, urlFile){
@@ -252,7 +319,7 @@ function sendFileAjax(url, data, urlFile){
         numPaq--;
         console.log(data1)
 
-        modal.find('#modal-body>ol').append('<li class="col-xs-12"><div class="col-xs-4">'+data1.timeTotal+' segundos</div><div class="col-xs-4">'+humanize(data1.sizeUpload)+' subidos</div><div class="col-xs-4">'+humanize(data1.lengthDownload)+' descargados</div></li>')
+        modal.find('#modal-body>ol').append('<li><div class="col-xs-4">'+data1.timeTotal+' segundos</div><div class="col-xs-4">'+humanize(data1.sizeUpload)+' subidos</div><div class="col-xs-4">'+humanize(data1.lengthDownload)+' descargados</div></li>')
         
         if(numPaq > 0 || infinito){
             setTimeout(function(){

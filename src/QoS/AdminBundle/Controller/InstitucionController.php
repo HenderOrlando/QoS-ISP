@@ -27,6 +27,9 @@ class InstitucionController extends Controller
      */
     public function indexAction()
     {
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $em = $this->getDoctrine()->getManager();
 
         $entities = $this->getRepository()->findAll();
@@ -180,19 +183,21 @@ class InstitucionController extends Controller
                                 ),
                             ),
                         ),
-                    'tbodys' => $this->getTBodys('mediciones-institucio', $entity),
+                    'tbodys' => $this->getTBodys('mediciones-institucion', $entity),
                     )
                 )
             );
         }
-
-        return array(
+        $data = array(
             'entity'        =>  $entity,
-            'delete_form'   =>  $deleteForm->createView(),
-            'form'          =>  $editForm->createView(),
             'rowMains'      => $rowMains,
             'datosGrafico'  => $datosGrafico,
         );
+        if(!is_null($deleteForm) && !is_null($editForm)){
+            $data['delete_form'] = $deleteForm->createView();
+            $data['form'] = $editForm->createView();
+        }
+        return $data;
     }
 
     /**
@@ -264,7 +269,7 @@ class InstitucionController extends Controller
         if ($editForm->isValid()) {
             $em->flush();
 
-            return $this->redirect($this->generateUrl('Institucion_edit', array('id' => $id)));
+            return $this->redirect($this->generateUrl('Institucion_show', array('id' => $id)));
         }
 
         return array(
@@ -362,58 +367,47 @@ class InstitucionController extends Controller
         
         $tbodys = array();
         switch($name){
-            case 'mediciones-institucio':
+            case 'mediciones-institucion':
             case 'mediciones-instituciones':
                 if(is_null($institucion)){
                     $instituciones = $this->getRepository()->findAll();
                     foreach($instituciones as $institucion){
-                        $medicionesInstitucion = '';
-                        $medicionesInstitucion = '';
-                        foreach($institucion->getMediciones() as $medicionInstitucion){
-                            $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
-                            $nombre = $medicionInstitucion->getNombre(true);
-                            $medicionesInstitucion = "<a href=\"$url\">$nombre</a>;";
-                        }
-                        $numMI = $institucion->getMediciones()->count();
-                        $pluralMI = $numMI == 1?'ón':'ones';
-                        $tbodys[]['tds'] = array(
-                            array(
-    //                            'val' => $institucion->getNombre()
-                                'val' => '<a href="'.$this->generateUrl('Institucion_show', array('id' => $institucion->getId())).'">'.$institucion->getNombre().'</a>'
-                            ),
-                            array(
-                                'val' => "$numMI medici$pluralMI en la Institución"
-                            ),
-                            array(
-                                'val' => $medicionesInstitucion
-                            ),
-                        );
+                        $tbodys[] = $this->getTbody($name, $institucion);
                     }
                 }else{
-                    $medicionesInstitucion = '';
-                    $medicionesInstitucion = '';
-                    foreach($institucion->getMediciones() as $medicionInstitucion){
-                        $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
-                        $nombre = $medicionInstitucion->getNombre(true);
-                        $medicionesInstitucion = "<a href=\"$url\">$nombre</a>;";
-                    }
-                    $numMI = $institucion->getMediciones()->count();
-                    $pluralMI = $numMI == 1?'ón':'ones';
-                    $tbodys[]['tds'] = array(
-                        array(
-//                            'val' => $institucion->getNombre()
-                            'val' => '<a href="'.$this->generateUrl('Institucion_show', array('id' => $institucion->getId())).'">'.$institucion->getNombre().'</a>'
-                        ),
-                        array(
-                            'val' => "$numMI medici$pluralMI en la Institución"
-                        ),
-                        array(
-                            'val' => $medicionesInstitucion
-                        ),
-                    );
+                    $tbodys[] = $this->getTbody($name, $institucion);
                 }
                 break;
         }
         return $tbodys;
+    }
+    public function getTbody($name, $institucion, $tbody = array()){
+        switch($name){
+            case 'mediciones-institucion':
+            case 'mediciones-instituciones':
+                $medicionesInstitucion = '';
+                foreach($institucion->getMediciones() as $medicionInstitucion){
+                    $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
+                    $nombre = $medicionInstitucion->getNombre(true);
+                    $fecha = $medicionInstitucion->getFechaCreado('Y-m-d');
+                    $medicionesInstitucion .= "<a class=\"open-modal label label-default\" href=\"$url\">$nombre ($fecha)</a> ";
+                }
+                $numMI = $institucion->getMediciones()->count();
+                $pluralMI = $numMI == 1?'ón':'ones';
+                $tbody['tds'] = array(
+                    array(
+//                            'val' => $institucion->getNombre()
+                        'val' => '<a href="'.$this->generateUrl('Institucion_show', array('id' => $institucion->getId())).'">'.$institucion->getNombre().'</a>'
+                    ),
+                    array(
+                        'val' => "$numMI medici$pluralMI en la Institución"
+                    ),
+                    array(
+                        'val' => $medicionesInstitucion
+                    ),
+                );
+                break;
+        }
+        return $tbody;
     }
 }

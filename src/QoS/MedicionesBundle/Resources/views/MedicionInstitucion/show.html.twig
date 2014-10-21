@@ -1,21 +1,45 @@
-{% extends '::base.html.twig' %}
+{#% extends '::base.html.twig' %}
 
 {% block body -%}
     <h1>MedicionInstitucion</h1>
-
-    <table class="record_properties">
+#}
+<div class="table-responsive">
+    <table class="table table-hover table-striped">
         <tbody>
             <tr>
-                <th>Id</th>
-                <td>{{ entity.id }}</td>
+                <th>Fecha</th>
+                <td>{{ entity.fechaCreado|date('Y-m-d H:i:s') }}</td>
+                <th>Tiempo Total de ésta Medición</th>
+                <td>{{ entity.timeTotal }} seg</td>
             </tr>
             <tr>
-                <th>Numpaquetes</th>
-                <td>{{ entity.numPaquetes }}</td>
+                <th>Paquete usado en ésta Medición</th>
+                <td>{{ entity.paquete }}</td>
+                <th>Cantidad de datos Subidos para ésta Medición</th>
+                <td>{{ entity.lengthUpload(true) }}</td>
+            </tr>
+            <tr>
+                <th>Institucion de ésta Medición</th>
+                <td>{{ entity.institucion }}</td>
+                <th>Cantidad de datos Descargados para ésta Medición</th>
+                <td>{{ entity.lengthDownload(true) }}</td>
+            </tr>
+            <tr>
+                <th>Proveedor del Servicio a ésta Institución</th>
+                <td>{{ entity.proveedor }}</td>
+                <th>Velocidad de Subida de ésta Medición</th>
+                <td>{{ entity.speedUpload(true) }}</td>
+            </tr>
+            <tr>
+                <th>Usuario que realiza la medición</th>
+                <td>{{ entity.usuario }}</td>
+                <th>Velocidad de Descarga de ésta Medición</th>
+                <td>{{ entity.speedDownload(true) }}</td>
             </tr>
         </tbody>
     </table>
-
+</div>
+{#
         <ul class="record_actions">
     <li>
         <a href="{{ path('medicioninstitucion') }}">
@@ -29,4 +53,4 @@
     </li>
     <li>{{ form(delete_form) }}</li>
 </ul>
-{% endblock %}
+{% endblock %#}

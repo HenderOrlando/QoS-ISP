@@ -29,6 +29,9 @@ class UsuarioController extends Controller
     {
         $em = $this->getDoctrine()->getManager();
 
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $entities = $em->getRepository('QoSAdminBundle:Usuario')->findAll();
 
         $datosGrafico = $this->getDatosGrafico();
@@ -77,6 +80,9 @@ class UsuarioController extends Controller
      */
     public function createAction(Request $request)
     {
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $entity = new Usuario();
         $form = $this->createCreateForm($entity, $this->getUser());
         $form->handleRequest($request);
@@ -124,6 +130,9 @@ class UsuarioController extends Controller
      */
     public function newAction()
     {
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $entity = new Usuario();
         $form   = $this->createCreateForm($entity);
 
@@ -143,6 +152,9 @@ class UsuarioController extends Controller
      */
     public function showAction($id=null, $username = null)
     {
+//        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+//            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+//        }
         $em = $this->getDoctrine()->getManager();
         $user = $this->getUser();
         $context = $this->get('security.context');
@@ -207,6 +219,9 @@ class UsuarioController extends Controller
      */
     public function editAction($id)
     {
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $em = $this->getDoctrine()->getManager();
 
         $entity = $em->getRepository('QoSAdminBundle:Usuario')->find($id);
@@ -254,6 +269,9 @@ class UsuarioController extends Controller
      */
     public function updateAction(Request $request, $id)
     {
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $em = $this->getDoctrine()->getManager();
 
         $entity = $em->getRepository('QoSAdminBundle:Usuario')->find($id);
@@ -267,6 +285,7 @@ class UsuarioController extends Controller
         $editForm->handleRequest($request);
 
         if ($editForm->isValid()) {
+            $this->setSecurePassword($entity);
             $em->flush();
 
             return $this->redirect($this->generateUrl('Usuario_show', array('id' => $id)));
@@ -286,6 +305,9 @@ class UsuarioController extends Controller
      */
     public function deleteAction(Request $request, $id)
     {
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $form = $this->createDeleteForm($id, $this->getUser());
         $form->handleRequest($request);
 
@@ -392,7 +414,7 @@ class UsuarioController extends Controller
                     foreach($rol->getUsuario() as $usr){
                         $url = $this->generateUrl('cuenta', array('username'=>$usr->getUsername()), true);
                         $email = $usr->getEmail();
-                        $usrs = "<a href=\"$url\">$email</a>;";
+                        $usrs .= "<a class=\"label label-default\" href=\"$url\">$email</a> ";
                     }
                     $tbodys[]['tds'] = array(
                         array(

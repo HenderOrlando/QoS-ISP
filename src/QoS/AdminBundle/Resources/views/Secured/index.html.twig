@@ -20,11 +20,21 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">
-                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Usuario') }}">Usuarios</a></li>
-                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Paquete') }}">Paquetes</a></li>
-                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Proveedor') }}">Proveedores</a></li>
-                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Institucion') }}">Instituciones</a></li>
-                <li><a class="btn-bg btn btn-link btn-block" href="{{ path('index_' ~ urlRole, {name: app.user.username}) }}">Mediciones</a></li>
+                {% if is_granted('ROLE_SUPER_ADMIN') %}
+                    <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Usuario') }}">Usuarios</a></li>
+                {% endif %}
+                {% if is_granted('ROLE_ADMIN') %}
+                    <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Paquete') }}">Paquetes</a></li>
+                    <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Institucion') }}">Instituciones</a></li>
+                    <li><a class="btn-bg btn btn-link btn-block" href="{{ path('Proveedor') }}">Proveedores</a></li>
+                {% endif %}
+                {% if is_granted('ROLE_PROVEEDOR') %}
+                {% endif %}
+                {% if is_granted('ROLE_INSTITUCION') %}
+                {% endif %}
+                {% if is_granted('ROLE_MEDIDOR') %}
+                    <li><a class="btn-bg btn btn-link btn-block" href="{{ path('index_' ~ urlRole, {name: app.user.username}) }}">Mediciones</a></li>
+                {% endif %}
                 <li>
                     <div class="dropdown">
                         <a class="btn-bg btn btn-link btn-block" data-toggle="dropdown" href="#">{{ app.user.username }}</a>

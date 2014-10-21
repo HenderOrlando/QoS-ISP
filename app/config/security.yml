@@ -5,7 +5,10 @@ security:
             cost:      12
 
     role_hierarchy:
-        ROLE_ADMIN:       ROLE_USER
+        ROLE_INSTITUCION: [ROLE_USER]
+        ROLE_PROVEEDOR:   [ROLE_USER]
+        ROLE_MEDIDOR:     [ROLE_PROVEEDOR]
+        ROLE_ADMIN:       [ROLE_MEDIDOR]
         ROLE_SUPER_ADMIN: [ROLE_USER, ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH]
 
     providers:
@@ -34,6 +37,12 @@ security:
     access_control:
         - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/Presentacion, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-#        - { path: ^/Usuario$, roles: ROLE_ADMIN }
+        - { path: ^/usuario, roles: ROLE_USER }
+        - { path: ^/usuario-medidor, roles: ROLE_MEDIDOR }
+#        - { path: ^/Usuario, roles: ROLE_SUPER_ADMIN }
+        - { path: ^/Paquete, roles: ROLE_SUPER_ADMIN }
+#        - { path: ^/Proveedor, roles: ROLE_SUPER_ADMIN }
+#        - { path: ^/Institucion, roles: ROLE_SUPER_ADMIN }
+#        - { path: ^/Proveedor*, roles: ROLE_ADMIN }
 #        - { path: ^/super$, roles: ROLE_SUPER_ADMIN }
         #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }

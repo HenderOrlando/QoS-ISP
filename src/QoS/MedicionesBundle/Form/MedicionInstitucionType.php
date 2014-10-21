@@ -29,7 +29,6 @@ class MedicionInstitucionType extends AbstractType
             ))
             ->add('proveedor', new ProveedorType(true))
             ->add('institucion', new InstitucionType(true))
-//            ->add('medicion', new MedicionType(true))
         ;
     }
     

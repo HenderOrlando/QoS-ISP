@@ -1,36 +1,44 @@
-{% extends '::base.html.twig' %}
+{#% extends '::base.html.twig' %}
 
 {% block body -%}
-    <h1>MedicionProveedor</h1>
-
-    <table class="record_properties">
+    <h1>MedicionInstitucion</h1>
+#}
+<div class="table-responsive">
+    <table class="table table-hover table-striped">
         <tbody>
             <tr>
-                <th>Id</th>
-                <td>{{ entity.id }}</td>
-            </tr>
-            <tr>
-                <th>Actual</th>
-                <td>{{ entity.actual }}</td>
-            </tr>
-            <tr>
-                <th>Fechacreado</th>
+                <th>Fecha</th>
                 <td>{{ entity.fechaCreado|date('Y-m-d H:i:s') }}</td>
+                <th>Actual</th>
+                <td>{{ entity.actual?'Si':'No' }}</td>
+            </tr>
+            <tr>
+                <th>Proveedor del Servicio a ésta Institución</th>
+                <td>{{ entity.proveedor }}</td>
+                <th>Velocidad de Subida de ésta Medición</th>
+                <td>{{ entity.speedUpload(true) }}</td>
+            </tr>
+            <tr>
+                <th>Usuario que realiza la medición</th>
+                <td>{{ entity.usuario }}</td>
+                <th>Velocidad de Descarga de ésta Medición</th>
+                <td>{{ entity.speedDownload(true) }}</td>
             </tr>
         </tbody>
     </table>
-
+</div>
+{#
         <ul class="record_actions">
     <li>
-        <a href="{{ path('medicionproveedor') }}">
+        <a href="{{ path('medicioninstitucion') }}">
             Back to the list
         </a>
     </li>
     <li>
-        <a href="{{ path('medicionproveedor_edit', { 'id': entity.id }) }}">
+        <a href="{{ path('medicioninstitucion_edit', { 'id': entity.id }) }}">
             Edit
         </a>
     </li>
     <li>{{ form(delete_form) }}</li>
 </ul>
-{% endblock %}
+{% endblock %#}

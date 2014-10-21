@@ -103,10 +103,11 @@ class MedicionInstitucion
      * @ORM\Column(type="datetime", nullable=false)
      */
     protected $fechaCreado;
+    
+    private $numPaquetes;
 
     public function __construct() {
         $this->fechaCreado = new \DateTime();
-        $this->numPaquetes = 0;
     }
     
     /**
@@ -117,6 +118,28 @@ class MedicionInstitucion
     public function getId()
     {
         return $this->id;
+    }
+    
+    /**
+     * Set numPaquetes
+     *
+     * @return MedicionInstitucion
+     */
+    public function setNumPaquetes($numPaquetes)
+    {
+        $this->numPaquetes = $numPaquetes;
+        
+        return $this;
+    }
+    
+    /**
+     * Get numPaquetes
+     *
+     * @return integer
+     */
+    public function getNumPaquetes()
+    {
+        return $this->numPaquetes;
     }
 
     /**
@@ -229,9 +252,13 @@ class MedicionInstitucion
      *
      * @return \DateTime 
      */
-    public function getFechaCreado()
+    public function getFechaCreado($formato = null)
     {
-        return $this->fechaCreado;
+        $fecha = $this->fechaCreado;
+        if(is_string($formato)){
+            $fecha = $fecha->format($formato);
+        }
+        return $fecha;
     }
     
     /**
@@ -471,9 +498,13 @@ class MedicionInstitucion
      *
      * @return float 
      */
-    public function getSpeedUpload()
+    public function getSpeedUpload($humanize = false)
     {
-        return $this->speedUpload;
+        $var = $this->speedUpload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
     }
 
     /**
@@ -494,9 +525,13 @@ class MedicionInstitucion
      *
      * @return float 
      */
-    public function getSpeedDownload()
+    public function getSpeedDownload($humanize = false)
     {
-        return $this->speedDownload;
+        $var = $this->speedDownload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
     }
 
     /**
@@ -517,9 +552,13 @@ class MedicionInstitucion
      *
      * @return float 
      */
-    public function getLengthUpload()
+    public function getLengthUpload($humanize = false)
     {
-        return $this->lengthUpload;
+        $var = $this->lengthUpload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
     }
 
     /**
@@ -540,9 +579,13 @@ class MedicionInstitucion
      *
      * @return float 
      */
-    public function getLengthDownload()
+    public function getLengthDownload($humanize = false)
     {
-        return $this->lengthDownload;
+        $var = $this->lengthDownload;
+        if($humanize){
+            $var = $this->humanize($var, true);
+        }
+        return $var;
     }
     
     public function humanize($size, $units_ = true){

@@ -262,7 +262,7 @@ class PaqueteController extends Controller
         if ($editForm->isValid()) {
             $em->flush();
 
-            return $this->redirect($this->generateUrl('Paquete_edit', array('id' => $id)));
+            return $this->redirect($this->generateUrl('Paquete_show', array('id' => $id)));
         }
 
         return array(
@@ -366,7 +366,8 @@ class PaqueteController extends Controller
                         foreach($paquete->getConfiguracion() as $medicion){
                             $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicion->getId()), true);
                             $nombre = $medicion->getNombre();
-                            $mediciones = "<a href=\"$url\">$nombre</a>;";
+                            $fecha = $medicion->getFechaCreado('Y-m-d Y:i');
+                            $mediciones .= "<a class=\"label label-default open-modal\" href=\"$url\">$nombre ($fecha)</a> ";
                         }
                         $tbodys[]['tds'] = array(
                             array(

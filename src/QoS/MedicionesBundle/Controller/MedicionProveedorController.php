@@ -19,6 +19,46 @@ class MedicionProveedorController extends Controller
 {
 
     /**
+     * Creates a new MedicionInstitucion entity.
+     *
+     * @Route("/{id}/Lista-de-{tipo}/", name="medicionproveedor_get_newBar_")
+     * @Route("/Lista-de-{tipo}/", name="medicionproveedor_get_newBar")
+     * @Method("GET")
+     * @Template("QoSMedicionesBundle:MedicionInstitucion:new.html.twig")
+     */
+    public function getNewBarAction(Request $request, $tipo, $id = null)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $tipo = strtolower($tipo);
+        switch($tipo){
+            case 'proveedores':
+//                if($id){
+//                    $proveedor = $em->getRepository('QoSAdminBundle:Proveedor')->find($id);
+//                    $objs = $institucion->getProveedores();
+//                }else{
+                    $objs = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
+//                }
+                break;
+//            case 'instituciones':
+//                if($id){
+//                    $institucion = $em->getRepository('QoSAdminBundle:Proveedor')->find($id);
+//                    $objs = $institucion->getInstituciones();
+//                }else{
+//                    $objs = $em->getRepository('QoSAdminBundle:Institucion')->findAll();
+//                }
+//                break;
+        }
+        $datos = array();
+        foreach($objs as $obj){
+            $datos[] = array(
+                'stateCode'=>$obj->getId(),
+                'stateName'=>$obj->__tostring(),
+                'abreviacion'=>$obj->getAbreviacion(),
+            );
+        }
+        return new \Symfony\Component\HttpFoundation\JsonResponse($datos);
+    }
+    /**
      * Lists all MedicionProveedor entities.
      *
      * @Route("/", name="medicionproveedor")
@@ -39,12 +79,20 @@ class MedicionProveedorController extends Controller
      * Creates a new MedicionProveedor entity.
      *
      * @Route("/", name="medicionproveedor_create")
+     * @Route("/{idProveedor}/", name="medicionproveedor_create_proveedor")
      * @Method("POST")
      * @Template("QoSMedicionesBundle:MedicionProveedor:new.html.twig")
      */
-    public function createAction(Request $request)
+    public function createAction(Request $request, $idProveedor = null)
     {
         $entity = new MedicionProveedor();
+        $entity->setUsuario($this->getUser());
+        if(!is_null($idProveedor)){
+            $proveedor = $this->getDoctrine()->getManager()->getRepository('QoSAdminBundle:Proveedor')->find($idProveedor);
+            if($proveedor){
+                $entity->setProveedor($proveedor);
+            }
+        }
         $form = $this->createCreateForm($entity);
         $form->handleRequest($request);
 
@@ -53,13 +101,21 @@ class MedicionProveedorController extends Controller
             $em->persist($entity);
             $em->flush();
 
+//            return $this->redirect($this->generateUrl('proveedor_show', array('id' => $entity->getProveedor()->getId())));
             return $this->redirect($this->generateUrl('medicionproveedor_show', array('id' => $entity->getId())));
         }
 
-        return array(
+        $data =  array(
             'entity' => $entity,
             'form'   => $form->createView(),
         );
+        if($request->isXmlHttpRequest()){
+            $data = \Symfony\Component\HttpFoundation\JsonResponse::create(array(
+                'body'  => $this->renderView('QoSMedicionesBundle:MedicionProveedor:new.html.twig', $data),
+                'title' => 'Agregar Medición Esperada por el proveedor'
+            ));
+        }
+        return $data;
     }
 
     /**
@@ -71,12 +127,21 @@ class MedicionProveedorController extends Controller
      */
     private function createCreateForm(MedicionProveedor $entity)
     {
+        $datos = array();
+        $url = 'medicionproveedor_create';
+        if($entity->getProveedor()){
+            $datos['idProveedor'] = $entity->getProveedor()->getId();
+            $url = 'medicionproveedor_create_proveedor';
+        }
         $form = $this->createForm(new MedicionProveedorType(), $entity, array(
-            'action' => $this->generateUrl('medicionproveedor_create'),
+            'em' => $this->getDoctrine()->getManager(),
+            'action' => $this->generateUrl($url, $datos),
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Create'));
+        $form->add('submit', 'submit', array('label' => 'Crear','attr'      =>  array(
+                    'class'         =>  'btn btn-success',
+                ),));
 
         return $form;
     }
@@ -85,18 +150,32 @@ class MedicionProveedorController extends Controller
      * Displays a form to create a new MedicionProveedor entity.
      *
      * @Route("/new", name="medicionproveedor_new")
+     * @Route("/new/{idProveedor}", name="medicionproveedor_new_proveedor")
      * @Method("GET")
      * @Template()
      */
-    public function newAction()
+    public function newAction(Request $request, $idProveedor = null)
     {
         $entity = new MedicionProveedor();
+        $entity->setUsuario($this->getUser());
+        if(!is_null($idProveedor)){
+            $proveedor = $this->getDoctrine()->getManager()->getRepository('QoSAdminBundle:Proveedor')->find($idProveedor);
+            if($proveedor){
+                $entity->setProveedor($proveedor);
+            }
+        }
         $form   = $this->createCreateForm($entity);
-
-        return array(
+        $data = array(
             'entity' => $entity,
             'form'   => $form->createView(),
         );
+        if($request->isXmlHttpRequest()){
+            $data = \Symfony\Component\HttpFoundation\JsonResponse::create(array(
+                'body'  => $this->renderView('QoSMedicionesBundle:MedicionProveedor:new.html.twig', $data),
+                'title' => 'Agregar Medición Esperada por el proveedor'
+            ));
+        }
+        return $data;
     }
 
     /**
@@ -106,7 +185,7 @@ class MedicionProveedorController extends Controller
      * @Method("GET")
      * @Template()
      */
-    public function showAction($id)
+    public function showAction(Request $request, $id)
     {
         $em = $this->getDoctrine()->getManager();
 
@@ -118,10 +197,17 @@ class MedicionProveedorController extends Controller
 
         $deleteForm = $this->createDeleteForm($id);
 
-        return array(
+        $data = array(
             'entity'      => $entity,
             'delete_form' => $deleteForm->createView(),
         );
+        if($request->isXmlHttpRequest()){
+            $data = \Symfony\Component\HttpFoundation\JsonResponse::create(array(
+                'body'  => $this->renderView('QoSMedicionesBundle:MedicionProveedor:show.html.twig', $data),
+                'title' => 'Medición del proveedor'
+            ));
+        }
+        return $data;
     }
 
     /**
@@ -165,7 +251,7 @@ class MedicionProveedorController extends Controller
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Update'));
+        $form->add('submit', 'submit', array('label' => 'Actualizar'));
 
         return $form;
     }
@@ -240,7 +326,7 @@ class MedicionProveedorController extends Controller
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('medicionproveedor_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => 'Delete'))
+            ->add('submit', 'submit', array('label' => 'Borrar'))
             ->getForm()
         ;
     }

@@ -27,12 +27,23 @@ class ProveedorController extends Controller
      */
     public function indexAction()
     {
+        if(false === $this->get('security.context')->isGranted('ROLE_SUPER_ADMIN')){
+            return $this->redirect($this->generateUrl('cuenta', array('username' => $this->getUser()->getUsername())));
+        }
         $em = $this->getDoctrine()->getManager();
-
+        
+        $context = $this->get('security.context');
+        
         $entities = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
 
         $datosGrafico = $this->getDatosGrafico();
         $rowMains = array();
+        $urlRole = 'name';
+        if($context->isGranted('ROLE_SUPER_ADMIN')){
+            $urlRole = 'super_admin';
+        }elseif ($context->isGranted('ROLE_ADMIN')){
+            $urlRole = 'admin';
+        }
         foreach($datosGrafico as $name => $dt){
             $rowMains[] = array(
                 'name'  =>  $name,
@@ -48,13 +59,19 @@ class ProveedorController extends Controller
                                     ),
                                     array(
                                         'val' => "Mediciones del Proveedor (Medición Esperada) "
-//                                        <a href=\"".$this->generateUrl('medicionproveedor_new')
-//                                        ."\" class=\"label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
+                                        ."<a href=\"".$this->generateUrl('medicionproveedor_new_proveedor')
+                                        ."\" class=\"pull-right open-modal label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
                                     ),
                                     array(
                                         'val' => "Mediciones al Proveedor (en Instituciones) "
-//                                        <a href=\"".$this->generateUrl('medicioninstitucion_new')
-//                                        ."\" class=\"label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
+                                        ."<a href=\"".$this->generateUrl('index_'.$urlRole,array('name'=>$this->getUser()->getUsername()))
+                                        ."\" class=\"pull-right label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
+                                    ),
+                                    array(
+                                        'val' => "Velocidad Promedio Total"
+                                    ),
+                                    array(
+                                        'val' => "Tiempo de Espera Promedio Total"
                                     ),
                                 ),
                             ),
@@ -150,10 +167,11 @@ class ProveedorController extends Controller
     {
         $em = $this->getDoctrine()->getManager();
         $user = $this->getUser();
+        
         $context = $this->get('security.context');
 
         $entity = $this->getRepository()->find($id);
-
+        
         if (!$entity) {
             throw $this->createNotFoundException("Paquete \"$id\" no encontrado.");
         }
@@ -168,6 +186,12 @@ class ProveedorController extends Controller
         
         $datosGrafico = $this->getDatosGrafico(null, $entity);
         $rowMains = array();
+        $urlRole = 'name';
+        if($context->isGranted('ROLE_SUPER_ADMIN')){
+            $urlRole = 'super_admin';
+        }elseif ($context->isGranted('ROLE_ADMIN')){
+            $urlRole = 'admin';
+        }
         foreach($datosGrafico as $name => $dt){
             $rowMains[] = array(
                 'name'  =>  $name,
@@ -183,13 +207,19 @@ class ProveedorController extends Controller
                                     ),
                                     array(
                                         'val' => "Mediciones del Proveedor (Medición Esperada) "
-//                                        <a href=\"".$this->generateUrl('medicionproveedor_new')
-//                                        ."\" class=\"label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
+                                        ."<a href=\"".$this->generateUrl('medicionproveedor_new_proveedor')
+                                        ."\" class=\"pull-right open-modal label label-success\" title=\"Agregar Medición Esperada del Servicio del Proveedor\">Agregar</a>"
                                     ),
                                     array(
                                         'val' => "Mediciones al Proveedor (en Instituciones) "
-//                                        <a href=\"".$this->generateUrl('medicioninstitucion_new')
-//                                        ."\" class=\"label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
+                                        ."<a href=\"".$this->generateUrl('index_'.$urlRole,array('name'=>$this->getUser()->getUsername()))
+                                        ."\" class=\"pull-right label label-success\" title=\"Hacer Medición a Servicio del Proveedor\">Agregar</a>"
+                                    ),
+                                    array(
+                                        'val' => "Velocidad Promedio Total"
+                                    ),
+                                    array(
+                                        'val' => "Tiempo de Espera Promedio Total"
                                     ),
                                 ),
                             ),
@@ -278,7 +308,7 @@ class ProveedorController extends Controller
         if ($editForm->isValid()) {
             $em->flush();
 
-            return $this->redirect($this->generateUrl('Proveedor_edit', array('id' => $id)));
+            return $this->redirect($this->generateUrl('Proveedor_show', array('id' => $id)));
         }
 
         return array(
@@ -382,73 +412,70 @@ class ProveedorController extends Controller
                 if(is_null($proveedor)){
                     $proveedores = $this->getRepository()->findAll();
                     foreach($proveedores as $proveedor){
-                        $medicionesProveedor = '';
-                        $medicionesInstitucion = '';
-                        foreach($proveedor->getMedicionesInstitucion() as $medicionInstitucion){
-                            $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
-                            $nombre = $medicionInstitucion->getNombre(true);
-                            $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
-                        }
-                        foreach($proveedor->getMedicionesProveedor() as $medicionProveedor){
-                            $url = $this->generateUrl('medicionproveedor_show', array('id'=>$medicionProveedor->getId()), true);
-                            $nombre = $medicionProveedor->getNombre(true);
-                            $medicionesProveedor .= "<a href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
-                        }
-                        $numMP = $proveedor->getMedicionesProveedor()->count();
-                        $pluralMP = $numMP == 1?'ón':'ones';
-                        $numMI = $proveedor->getMedicionesInstitucion()->count();
-                        $pluralMI = $numMI == 1?'ón':'ones';
-                        $tbodys[]['tds'] = array(
-                            array(
-    //                            'val' => $proveedor->getNombre()
-                                'val' => '<a href="'.$this->generateUrl('Proveedor_show', array('id' => $proveedor->getId())).'">'.$proveedor->getNombre().'</a>'
-                            ),
-                            array(
-                                'val' => "$numMI medici$pluralMI en Instituciones <br/> $numMP medici$pluralMP base del servicio del proveedor"
-                            ),
-                            array(
-                                'val' => $medicionesProveedor
-                            ),
-                            array(
-                                'val' => $medicionesInstitucion
-                            ),
-                        );
+                        $tbodys[] = $this->getTbody($name, $proveedor);
                     }
                 }else{
-                    $medicionesProveedor = '';
-                    $medicionesInstitucion = '';
-                    foreach($proveedor->getMedicionesInstitucion() as $medicionInstitucion){
-                        $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
-                        $nombre = $medicionInstitucion->getNombre(true);
-                        $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
-                    }
-                    foreach($proveedor->getMedicionesProveedor() as $medicionProveedor){
-                        $url = $this->generateUrl('medicionproveedor_show', array('id'=>$medicionProveedor->getId()), true);
-                        $nombre = $medicionProveedor->getNombre(true);
-                        $medicionesProveedor .= "<a href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
-                    }
-                    $numMP = $proveedor->getMedicionesProveedor()->count();
-                    $pluralMP = $numMP == 1?'ón':'ones';
-                    $numMI = $proveedor->getMedicionesInstitucion()->count();
-                    $pluralMI = $numMI == 1?'ón':'ones';
-                    $tbodys[]['tds'] = array(
-                        array(
-//                            'val' => $proveedor->getNombre()
-                            'val' => '<a href="'.$this->generateUrl('Proveedor_show', array('id' => $proveedor->getId())).'">'.$proveedor->getNombre().'</a>'
-                        ),
-                        array(
-                            'val' => "$numMI medici$pluralMI en Instituciones <br/> $numMP medici$pluralMP base del servicio del proveedor"
-                        ),
-                        array(
-                            'val' => $medicionesProveedor
-                        ),
-                        array(
-                            'val' => $medicionesInstitucion
-                        ),
-                    );
+                    $tbodys[] = $this->getTbody($name, $proveedor);
                 }
                 break;
         }
         return $tbodys;
+    }
+    public function getTbody($name, Proveedor $proveedor, $tbody = array()){
+        switch($name){
+            case 'mediciones-proveedor':
+            case 'mediciones-proveedores':
+                $medicionesProveedor = '';
+                $medicionesInstitucion = '';
+                foreach($proveedor->getMedicionesProveedor() as $medicionProveedor){
+                    $url = $this->generateUrl('medicionproveedor_show', array('id'=>$medicionProveedor->getId()), true);
+                    $nombre = $medicionProveedor->getNombre(true);
+                    $fecha = $medicionProveedor->getFechaCreado('Y-m-d H:i');
+                    $label = 'default';
+                    if($medicionProveedor->isActual()){
+                        $label = 'success';
+                    }
+                    $medicionesProveedor .= "<a class=\"open-modal label label-$label\" href=\"$url\">$nombre ($fecha)</a> ";
+                }
+                foreach($proveedor->getMedicionesInstitucion() as $medicionInstitucion){
+                    $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
+                    $nombre = $medicionInstitucion->getNombre(true);
+                    $fecha = $medicionInstitucion->getFechaCreado('Y-m-d H:i');
+                    $label = 'default';
+                    $medActual = $proveedor->getMedicionActual();
+                    if($medActual){
+                        if($medicionInstitucion->getSpeedDownload() < ($medActual->getSpeedDownload()-$proveedor->getHolgura()))
+                        $label = 'warning';
+                    }
+                    $medicionesInstitucion .= "<a class=\"open-modal label label-$label\" href=\"$url\">$nombre ($fecha)</a> ";
+                }
+                $numMP = $proveedor->getMedicionesProveedor()->count();
+                $pluralMP = $numMP == 1?'ón':'ones';
+                $numMI = $proveedor->getMedicionesInstitucion()->count();
+                $pluralMI = $numMI == 1?'ón':'ones';
+                $tbody['tds'] = array(
+                    array(
+//                            'val' => $proveedor->getNombre()
+                        'val' => '<a href="'.$this->generateUrl('Proveedor_show', array('id' => $proveedor->getId())).'">'.$proveedor->getNombre().'</a>'
+                    ),
+                    array(
+                        'val' => "$numMI medici$pluralMI en Instituciones <br/> $numMP medici$pluralMP base del servicio del proveedor"
+                    ),
+                    array(
+                        'val' => $medicionesProveedor
+                    ),
+                    array(
+                        'val' => $medicionesInstitucion
+                    ),
+                    array(
+                        'val' => $proveedor->getPromedioTotal()
+                    ),
+                    array(
+                        'val' => $proveedor->getTimePromedioTotal().' seg'
+                    ),
+                );
+                break;
+        }
+        return $tbody;
     }
 }

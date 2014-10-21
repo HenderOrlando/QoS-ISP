@@ -242,15 +242,32 @@ class Proveedor extends Objeto
         return $this->medicionesInstitucion;
     }
     
-    public function getMediciones($tipo){
+    public function getMediciones($tipo = 'todos'){
+        $ac = new \Doctrine\Common\Collections\ArrayCollection();
         switch ($tipo) {
             case 'institucion':
-                return $this->getMedicionesInstitucion();
+                $ac = $this->getMedicionesInstitucion();
             case 'proveedor':
-                return $this->getMedicionesProveedor();
+                $ac = $this->getMedicionesProveedor();
             default:
-                return array_merge($this->getMedicionesProveedor()->toArray(), $this->getMedicionesInstitucion());
+                $ac = new \Doctrine\Common\Collections\ArrayCollection(array_merge($this->getMedicionesProveedor()->toArray(), $this->getMedicionesInstitucion()->toArray()));
         }
+        return $ac;
+    }
+    
+    /**
+     * Get medicionActual
+     *
+     * @return \QoS\MedicionesBundle\Entity\MedicionProveedor
+     */
+    public function getMedicionActual(){
+        $actuales = $this->getMedicionesProveedor()->filter(function(\QoS\MedicionesBundle\Entity\MedicionProveedor $mp){
+            return $mp->isActual();
+        });
+        if(!$actuales->isEmpty()){
+            return $actuales->first();
+        }
+        return null;
     }
     
     /**
@@ -287,27 +304,47 @@ class Proveedor extends Objeto
     }
     
     public function getPromedioDownload(Institucion $institucion = null, $humanize = true){
-        return $this->getPromedio($institucion, true, $humanize);
+        return $this->getPromedio($institucion, 'download', $humanize);
     }
     public function getPromedioUpload(Institucion $institucion = null, $humanize = true){
-        return $this->getPromedio($institucion,false, $humanize);
+        return $this->getPromedio($institucion,'upload', $humanize);
     }
     public function getPromedioTotal(Institucion $institucion = null, $humanize = true){
-        return $this->getPromedio($institucion, null, $humanize);
+        return $this->getPromedio($institucion, 'promedioTotal',$humanize);
     }
-    private function getPromedio(Institucion $institucion = null, $download = false, $humanize = true){
+    public function getTimePromedioDownload(Institucion $institucion = null){
+        return $this->getPromedio($institucion, 'timeDownload', false);
+    }
+    public function getTimePromedioUpload(Institucion $institucion = null){
+        return $this->getPromedio($institucion,'timeUpload', false);
+    }
+    public function getTimePromedioTotal(Institucion $institucion = null){
+        return $this->getPromedio($institucion, 'timeTotal', false);
+    }
+    private function getPromedio(Institucion $institucion = null, $tipoMedicion = 'upload', $humanize = true){
         $promedio = 0;
         $count = 0;
-        $medicion = null;
+        $medicion = new \QoS\MedicionesBundle\Entity\MedicionInstitucion();
         foreach ($this->getMedicionesInstitucion() as $medicion) {
             $speed = 0;
             if(is_null($institucion) || $medicion->getInstitucion()->getId() === $institucion->getId()){
-                if(!is_null($download) && $download){
-                    $speed = $medicion->getSpeedDownload();
-                }elseif(!is_null($download) && !$download){
-                    $speed = $medicion->getSpeedUpload();
-                }else{
-                    $speed = ($medicion->getSpeedDownload() + $medicion->getSpeedUpload())/2;
+                switch($tipoMedicion){
+                    case 'upload':
+                        $speed = $medicion->getSpeedUpload();
+                        break;
+                    case 'download':
+                        $speed = $medicion->getSpeedDownload();
+                        break;
+                    case 'timeDownload':
+                    case 'timeUpload':
+                        $speed = $medicion->getTimeTotal()/2;
+                        break;
+                    case 'timeTotal':
+                        $speed = $medicion->getTimeTotal();
+                        break;
+                    default:
+                        $speed = ($medicion->getSpeedDownload() + $medicion->getSpeedUpload())/2;
+                        break;
                 }
                 $promedio += $speed;
                 $count++;
@@ -318,12 +355,10 @@ class Proveedor extends Objeto
             $count = 1;
         }
         if($humanize){
-            if(is_object($medicion) && method_exists($medicion,'humanize')){
-                return $medicion->humanize($promedio/$count,false);//byte/seg
-            }
             return $medicion->humanize($promedio/$count).'/seg';
         }
-        return 0;
+//        return $medicion->humanize($promedio/$count,false);//byte/seg
+        return $promedio/$count;//byte/seg
     }
     
     public function __toString() {

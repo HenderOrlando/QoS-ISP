@@ -26,6 +26,7 @@ class PaqueteType extends AbstractType
                 ),
             ))
             ->add('file', null, array(
+                'required'  =>  false,
                 'label'     =>  'Archivo a cargar',
                 'label_attr'=>  array(
                     'class' =>  'sr-only',
@@ -36,6 +37,7 @@ class PaqueteType extends AbstractType
                 ),
             ))
             ->add('path', null, array(
+                'required'  =>  false,
                 'label'     =>  'Url del Archivo',
                 'label_attr'=>  array(
                     'class' =>  'sr-only',

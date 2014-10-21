@@ -33,7 +33,7 @@ class MedirInstitucionType extends AbstractType
                     'class' =>  'sr-only',
                 ),
                 'attr'      =>  array(
-                    'title'         =>  'Si deja en blanco podrá detenerlo en cualquier momento',
+                    'title'         =>  'Si deja en blanco o "0" podrá detenerlo en cualquier momento',
                     'class'         =>  'form-control input-lg',
                     'placeholder'   =>  'Cantidad de Paquetes',
                 ),

@@ -27,6 +27,7 @@ class Institucion extends Objeto
 
     /**
      * @ORM\OneToMany(targetEntity="QoS\MedicionesBundle\Entity\MedicionInstitucion", mappedBy="institucion")
+     * @ORM\OrderBy({"fechaCreado" = "ASC"})
      */
     private $mediciones;
 
@@ -36,6 +37,7 @@ class Institucion extends Objeto
      *  joinColumns={@ORM\JoinColumn(name="institucion_id", referencedColumnName="id")},
      *  inverseJoinColumns={@ORM\JoinColumn(name="proveedor_id", referencedColumnName="id")}
      * )
+     * @ORM\OrderBy({"fechaCreado" = "ASC", "nombre" = "ASC"})
      */
     private $proveedores;
     
@@ -149,6 +151,19 @@ class Institucion extends Objeto
     {
         return $this->mediciones;
     }
+
+    /**
+     * Get medicionProveedor
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getMedicionesProveedor(Proveedor $proveedor)
+    {
+        $filter = $this->getMediciones()->filter(function(\QoS\MedicionesBundle\Entity\MedicionInstitucion $p1) use ($proveedor){
+            return $proveedor->getId() === $p1->getProveedor()->getId();
+        });
+        return $filter;
+    }
     
     public function getPromedioDownload(Proveedor $proveedor = null, $humanize = true){
         return $this->getPromedio($proveedor, true, $humanize);
@@ -162,7 +177,7 @@ class Institucion extends Objeto
     private function getPromedio(Proveedor $proveedor = null, $download = false, $humanize = true){
         $promedio = 0;
         $count = 0;
-        $medicion = null;
+        $medicion = new \QoS\MedicionesBundle\Entity\MedicionInstitucion();
         foreach ($this->getMediciones() as $medicion) {
             $speed = 0;
             if(is_null($proveedor) || $medicion->getProveedor()->getId() === $proveedor->getId()){
@@ -183,12 +198,9 @@ class Institucion extends Objeto
         }
         
         if($humanize){
-            if(is_object($medicion) && method_exists($medicion,'humanize')){
-                return $medicion->humanize($promedio/$count,false);//byte/seg
-            }
             return $medicion->humanize($promedio/$count).'/seg';
         }
-        return 0;
+        return $medicion->humanize($promedio/$count,false);//byte/seg
     }
 
     /**
