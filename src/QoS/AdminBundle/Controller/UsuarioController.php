@@ -200,14 +200,17 @@ class UsuarioController extends Controller
                 )
             );
         }
-        
-        return array(
+        $datos = array(
             'entity'        =>  $entity,
-            'delete_form'   =>  $deleteForm->createView(),
-            'form'          =>  $editForm->createView(),
             'rowMains'      => $rowMains,
             'datosGrafico'  => $datosGrafico,
         );
+        if($context && $context->isGranted('ROLE_SUPER_ADMIN') || $user->getId() === $entity->getId()){
+            $datos['delete_form'] = $deleteForm->createView();
+            $datos['form']  = $editForm->createView();
+        }
+        
+        return $datos;
     }
 
     /**
@@ -441,8 +444,7 @@ class UsuarioController extends Controller
                         foreach($usuario->getMedicionesInstitucion() as $medicionInstitucion){
                             $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
                             $nombre = $medicionInstitucion->getNombre(true);
-                            $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
-//                            $medicionesInstitucion .= $nombre;
+                            $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a> ";
                         }
                         foreach($usuario->getMedicionesUsuario() as $medicionUsuario){
                             $url = $this->generateUrl('medicionusuario_show', array('id'=>$medicionUsuario->getId()), true);
@@ -475,8 +477,9 @@ class UsuarioController extends Controller
                     foreach($usuario->getMedicionesInstitucion() as $medicionInstitucion){
                         $url = $this->generateUrl('medicioninstitucion_show', array('id'=>$medicionInstitucion->getId()), true);
                         $nombre = $medicionInstitucion->getNombre(true);
-//                        $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre</a>; ";//class=\"label label-default\"
-                        $medicionesInstitucion .= "<li>$nombre;</li> ";
+                        $fecha = $medicionInstitucion->getFechaCreado('Y-d-d H:i');
+                        $medicionesInstitucion .= "<a class=\"label label-default\" href=\"$url\">$nombre ($fecha)</a> ";
+//                        $medicionesInstitucion .= "<li>$nombre;</li> ";
                     }
                     $medicionesInstitucion .= '</ul>';
                     $numMI = $usuario->getMedicionesInstitucion()->count();

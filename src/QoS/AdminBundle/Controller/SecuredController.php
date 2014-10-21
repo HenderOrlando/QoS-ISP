@@ -6,6 +6,7 @@ use QoS\AdminBundle\Form\SearchType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\SecurityContext;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
@@ -125,12 +126,31 @@ class SecuredController extends Controller
         );
         if ($form->isValid()) {
             $data = $form->getData();
-            $rta['textToSearch'] = $data['search'];
-            $rta['paquetes'] = new ArrayCollection();
-            $rta['usuarios'] = new ArrayCollection();
-            $rta['mediciones'] = new ArrayCollection();
-            $rta['proveedores'] = new ArrayCollection();
-            $rta['instituciones'] = new ArrayCollection();
+            $em = $this->getDoctrine()->getManager();
+            $proveedor = $em->getRepository('QoSAdminBundle:Proveedor')->findOneByNombre($data['search']);
+            $ret = null;
+            if(!$proveedor){
+                $institucion = $em->getRepository('QoSAdminBundle:Institucion')->findOneByNombre($data['search']);
+                if(!$institucion){
+                    $usuario = $em->getRepository('QoSAdminBundle:Usuario')->findOneByUsername($data['search']);
+                    if(!$usuario){
+                        $ret = $this->redirect($request->headers->get('referer'));
+                    }else{
+                        $ret = $this->redirect($this->generateUrl('Usuario_show',array('id' => $usuario->getId())));
+                    }
+                }else{
+                    $ret = $this->redirect($this->generateUrl('Institucion_show',array('id' => $proveedor->getId())));
+                }
+            }else{
+                $ret = $this->redirect($this->generateUrl('Proveedor_show',array('id' => $proveedor->getId())));
+            }
+            return $ret;
+//            $rta['textToSearch'] = $data['search'];
+//            $rta['paquetes'] = new ArrayCollection();
+//            $rta['usuarios'] = new ArrayCollection();
+//            $rta['mediciones'] = new ArrayCollection();
+//            $rta['proveedores'] = new ArrayCollection();
+//            $rta['instituciones'] = new ArrayCollection();
 //            $em = $this->getDoctrine()->getManager();
 //            $em->persist($entity);
 //            $em->flush();
@@ -388,5 +408,55 @@ class SecuredController extends Controller
             }
         }
         return $name;
+    }
+    
+    /**
+     * Creates a new MedicionInstitucion entity.
+     *
+     * @Route("/usuario-{name}/find/Lista-de-{tipo}/{id}/", name="secured_get_newBar_")
+     * @Route("/usuario-{name}/find/Lista-de-{tipo}/", name="secured_get_newBar")
+     * @Method("GET")
+     * @Template()
+     */
+    public function getNewBarAction(Request $request, $tipo, $id = null)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $tipo = strtolower($tipo);
+        switch($tipo){
+            case 'proveedores':
+                if($id){
+                    $institucion = $em->getRepository('QoSAdminBundle:Institucion')->find($id);
+                    $objs = $institucion->getProveedores();
+                }else{
+                    $objs = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
+                }
+                break;
+            case 'instituciones':
+                if($id){
+                    $institucion = $em->getRepository('QoSAdminBundle:Proveedor')->find($id);
+                    $objs = $institucion->getInstituciones();
+                }else{
+                    $objs = $em->getRepository('QoSAdminBundle:Institucion')->findAll();
+                }
+                break;
+            case 'usuarios':
+                $objs = $em->getRepository('QoSAdminBundle:Usuario')->findAll();
+                break;
+            default:
+                $instituciones = $em->getRepository('QoSAdminBundle:Institucion')->findAll();
+                $proveedores = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
+                $usuarios = $em->getRepository('QoSAdminBundle:Usuario')->findAll();
+                $objs = new \Doctrine\Common\Collections\ArrayCollection(array_merge($instituciones, $proveedores, $usuarios));
+                break;
+        }
+        $datos = array();
+        foreach($objs as $obj){
+            $datos[] = array(
+                'stateCode'=>$obj->getId(),
+                'stateName'=>$obj->getNombre(),
+                'abreviacion'=>$obj->getAbreviacion(),
+            );
+        }
+        return new \Symfony\Component\HttpFoundation\JsonResponse($datos);
     }
 }

@@ -244,6 +244,10 @@ class Usuario implements AdvancedUserInterface, \Serializable, EquatableInterfac
     {
         return $this->username;
     }
+    public function getNombre()
+    {
+        return $this->getUsername();
+    }
 //
 //    /**
 //     * Set usernamecanonical
@@ -266,6 +270,9 @@ class Usuario implements AdvancedUserInterface, \Serializable, EquatableInterfac
     public function getUsernamecanonical()
     {
         return $this->usernamecanonical;
+    }
+    public function getAbreviacion(){
+        return $this->getUsernamecanonical();
     }
 
     /**

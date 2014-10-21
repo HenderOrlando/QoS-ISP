@@ -248,6 +248,15 @@ class MedicionInstitucionController extends Controller
                     $objs = $em->getRepository('QoSAdminBundle:Institucion')->findAll();
                 }
                 break;
+            case 'usuarios':
+                $objs = $em->getRepository('QoSAdminBundle:Usuario')->findAll();
+                break;
+            default:
+                $instituciones = $em->getRepository('QoSAdminBundle:Institucion')->findAll();
+                $proveedores = $em->getRepository('QoSAdminBundle:Proveedor')->findAll();
+                $usuarios = $em->getRepository('QoSAdminBundle:Usuario')->findAll();
+                $objs = new \Doctrine\Common\Collections\ArrayCollection(array_merge($instituciones->toArray(), $proveedores->toArray(), $usuarios->toArray()));
+                break;
         }
         $datos = array();
         foreach($objs as $obj){
