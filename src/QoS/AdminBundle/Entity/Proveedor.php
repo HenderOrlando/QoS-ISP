@@ -317,9 +317,10 @@ class Proveedor extends Objeto
             $promedio = 0;
             $count = 1;
         }
-        if(is_object($medicion) && method_exists($medicion,'humanize')){
-            return $medicion->humanize($promedio/$count,false);//byte/seg
-        }elseif($humanize){
+        if($humanize){
+            if(is_object($medicion) && method_exists($medicion,'humanize')){
+                return $medicion->humanize($promedio/$count,false);//byte/seg
+            }
             return $medicion->humanize($promedio/$count).'/seg';
         }
         return 0;
