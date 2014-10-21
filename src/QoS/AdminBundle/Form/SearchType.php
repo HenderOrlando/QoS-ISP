@@ -21,6 +21,7 @@ class SearchType extends AbstractType
                     'class' =>  'sr-only',
                 ),
                 'attr'      =>  array(
+                    'autocomplete'  =>  'off',
                     'class'         =>  'form-control navbar-form navbar-right typeahead',
                     'placeholder'   =>  'Buscar...',
                 ),

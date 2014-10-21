@@ -16,7 +16,10 @@
             {% elseif is_granted('ROLE_ADMIN') %}
                 {% set urlRole = 'admin' %}
             {% endif %}
-            <a class="navbar-brand" href="{{- path('index_' ~ urlRole, {name: app.user.username}) -}}">QoS - ISP</a>
+            <a class="navbar-brand" href="{{- path('index_' ~ urlRole, {name: app.user.username}) -}}">
+                <img class="pull-left" src="{{ asset('escudounipamplona.png') }}" /> 
+                QoS - ISP
+            </a>
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav navbar-right">

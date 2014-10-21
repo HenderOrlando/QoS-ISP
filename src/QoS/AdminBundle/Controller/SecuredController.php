@@ -134,12 +134,12 @@ class SecuredController extends Controller
                 if(!$institucion){
                     $usuario = $em->getRepository('QoSAdminBundle:Usuario')->findOneByUsername($data['search']);
                     if(!$usuario){
-                        $ret = $this->redirect($request->headers->get('referer'));
+                        $ret = $this->redirect($this->generateUrl('index'));
                     }else{
                         $ret = $this->redirect($this->generateUrl('Usuario_show',array('id' => $usuario->getId())));
                     }
                 }else{
-                    $ret = $this->redirect($this->generateUrl('Institucion_show',array('id' => $proveedor->getId())));
+                    $ret = $this->redirect($this->generateUrl('Institucion_show',array('id' => $institucion->getId())));
                 }
             }else{
                 $ret = $this->redirect($this->generateUrl('Proveedor_show',array('id' => $proveedor->getId())));

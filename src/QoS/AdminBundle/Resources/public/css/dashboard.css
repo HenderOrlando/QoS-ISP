@@ -231,3 +231,7 @@ body {
     background-color: #e0e0e0;
     background-position: 0 -15px;
 }
+.navbar-brand img{
+    max-height: 40px;
+    margin-top: -10px;
+}
