@@ -184,7 +184,7 @@ class Institucion extends Objeto
         if($humanize){
             return $medicion->humanize($promedio/$count).'/seg';
         }
-        if($medicion){
+        if(is_object($medicion) && method_exist($medicion,'humanize')){
             return $medicion->humanize($promedio/$count,false);//byte/seg
         }
         return 0;
