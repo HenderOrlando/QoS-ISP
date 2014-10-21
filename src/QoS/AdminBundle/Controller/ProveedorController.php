@@ -468,7 +468,7 @@ class ProveedorController extends Controller
                         'val' => $medicionesInstitucion
                     ),
                     array(
-                        'val' => $proveedor->getPromedioTotal().' '.($proveedor->getPromedioTotal() < $proveedor->getMedicionActual()->getSpeedDownload()-$proveedor->getHolgura()?'<span class="label label-danger">Fallida</span>':'<span class="label label-success">Satisfactoria</span>')
+                        'val' => $proveedor->getPromedioTotal().' '.($proveedor->getMedicionActual()?($proveedor->getPromedioTotal() < $proveedor->getMedicionActual()->getSpeedDownload()-$proveedor->getHolgura()?'<span class="label label-danger">Fallida</span>':'<span class="label label-success">Satisfactoria</span>'):'')
                     ),
                     array(
                         'val' => $proveedor->getTimePromedioTotal().' seg'
