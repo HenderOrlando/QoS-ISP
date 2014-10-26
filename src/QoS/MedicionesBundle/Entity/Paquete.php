@@ -14,12 +14,12 @@ class Paquete extends Objeto
 {
 
     /**
-     * @ORM\Column(type="float", nullable=false)
+     * @ORM\Column(type="float", nullable=true)
      */
     private $tam;
 
     /**
-     * @ORM\Column(type="string", length=4, nullable=false)
+     * @ORM\Column(type="string", length=4, nullable=true)
      */
     private $unidadTam;
 
