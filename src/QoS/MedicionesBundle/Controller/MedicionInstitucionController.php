@@ -20,7 +20,7 @@ class MedicionInstitucionController extends Controller
 {
 
     /**
-     * Lists all MedicionInstitucion entities.
+     * Lista de todas las MedicionInstitucion.
      *
      * @Route("/", name="medicioninstitucion")
      * @Method("GET")
@@ -28,8 +28,10 @@ class MedicionInstitucionController extends Controller
      */
     public function indexAction()
     {
+        /* Obtiene el manejador ORM para realizar consultas a la Base de Datos */
         $em = $this->getDoctrine()->getManager();
 
+        /* Consulta en la base de datos y recupera todas las mediciones realizadas en las instituciones */
         $entities = $em->getRepository('QoSMedicionesBundle:MedicionInstitucion')->findAll();
 
         return array(
@@ -37,7 +39,7 @@ class MedicionInstitucionController extends Controller
         );
     }
     /**
-     * Creates a new MedicionInstitucion entity.
+     * Crea una nueva MedicionInstitucion.
      *
      * @Route("/", name="medicioninstitucion_create")
      * @Method("POST")
@@ -45,18 +47,27 @@ class MedicionInstitucionController extends Controller
      */
     public function createAction(Request $request)
     {
+        /* Crea un nuevo objeto */
         $entity = new MedicionInstitucion();
+        /* Crea el formulario con las validaciones necesarias de los datos */
         $form = $this->createCreateForm($entity);
+        /* Confronta, Valida y Guarda los datos recibidos y las características del nuevo objeto */
         $form->handleRequest($request);
 
+        /* Pregunta si es válido el formulario */
         if ($form->isValid()) {
+            /* Obtiene el manejador ORM para realizar consultas a la Base de Datos */
             $em = $this->getDoctrine()->getManager();
+            /* Le dice al manejador que se desea guardar el objeto con los datos encontrados */
             $em->persist($entity);
+            /* Le dice al manejador ORM que guarde el objeto en la Base de Datos */
             $em->flush();
 
+            /* Redirecciona */
             return $this->redirect($this->generateUrl('medicioninstitucion_show', array('id' => $entity->getId())));
         }
 
+        /* En caso de no ser válidos, muestra los errores para corregirlos y guardar */
         return array(
             'entity' => $entity,
             'form'   => $form->createView(),
@@ -64,7 +75,7 @@ class MedicionInstitucionController extends Controller
     }
 
     /**
-     * Creates a form to create a MedicionInstitucion entity.
+     * Crea un formulario para agregar una MedicionInstitucion.
      *
      * @param MedicionInstitucion $entity The entity
      *
@@ -72,18 +83,19 @@ class MedicionInstitucionController extends Controller
      */
     private function createCreateForm(MedicionInstitucion $entity)
     {
+        /* Crea el formulario */
         $form = $this->createForm(new MedicionInstitucionType(), $entity, array(
             'action' => $this->generateUrl('medicioninstitucion_create'),
             'method' => 'POST',
         ));
-
+        /* Agrega el botón submit */
         $form->add('submit', 'submit', array('label' => 'Tomar Medición'));
 
         return $form;
     }
 
     /**
-     * Displays a form to create a new MedicionInstitucion entity.
+     * Muestra un formulario para crear una nueva MedicionInstitucion.
      *
      * @Route("/new", name="medicioninstitucion_new")
      * @Method("GET")
@@ -91,7 +103,9 @@ class MedicionInstitucionController extends Controller
      */
     public function newAction()
     {
+        /* Crea un nuevo objeto */
         $entity = new MedicionInstitucion();
+        /* Crea el formulario con las validaciones necesarias de los datos */
         $form   = $this->createCreateForm($entity);
 
         return array(
@@ -109,16 +123,20 @@ class MedicionInstitucionController extends Controller
      */
     public function createNewBarAction(Request $request)
     {
+        /* Crea un nuevo objeto */
         $entity = new MedicionInstitucion();
+        /* Crea el formulario con las validaciones necesarias de los datos */
         $form = $this->createForm(new MedirInstitucionType(), $entity, array(
             'em' => $this->getDoctrine()->getManager(),
             'action' => $this->generateUrl('medicioninstitucion_create_newBar'),
             'method' => 'PATCH',
         ));
-
+        /* Agrega el botón submit */
         $form->add('submit', 'submit', array('label' => 'Tomar Medición'));
+        /* Confronta, Valida y Guarda los datos recibidos y las características del nuevo objeto */
         $form->handleRequest($request);
 
+        /* Arma la respuesta */
         $json = array(
             'msgs' => array(
                 'error' => array(
@@ -126,15 +144,21 @@ class MedicionInstitucionController extends Controller
                     ),
             ),
         );
+        /* Pregunta si es válido el formulario */
         if ($form->isValid()) {
+            /* Obtiene el manejador ORM para realizar consultas a la Base de Datos */
             $em = $this->getDoctrine()->getManager();
+            /* el paquete es válido? */
             if(!$entity->getPaquete()){
+                /* Obtenga los paquetes */
                 $paquetes = $em->getRepository('QoSMedicionesBundle:Paquete')->findAll();
 //                $entity->setPaquete($paquetes->get(array_rand($paquetes->toArray())));
                 $i = 0;
+                /* elija un número al azar entre 0 - numero de paquetes */
                 $rand = intval(rand(0, count($paquetes)-1));
 //                $rand = 2;
                 $paquete = null;
+                /* Búsque el paquete de número $i */
                 foreach($paquetes as $paq){
                     if($i === $rand){
                         $paquete = $paq;
@@ -142,15 +166,20 @@ class MedicionInstitucionController extends Controller
                     }
                     $i++;
                 }
+                /* Guarde el paquete que usará para medir */
                 $entity->setPaquete($paquete);
             }
+            /* Guarde el usuario que está realizando la medición */
             $entity->setUsuario($this->getUser());
+            /* Le dice al manejador que se desea guardar el objeto con los datos encontrados */
             $em->persist($entity);
+            /* Le dice al manejador ORM que guarde el objeto en la Base de Datos */
             $em->flush();
+            /* Arma la respuesta */
             $json = array(
                 'msgs' => array(
                     'success' => array(
-                        'Formulario válido',
+                        'Datos guardados',
                     ),
                 ),
                 'form' => $this->renderView('QoSAdminBundle:Secured:_form.html.twig', array('form'=>$form->createView())),
@@ -172,28 +201,45 @@ class MedicionInstitucionController extends Controller
      */
     public function getMedirFileAction(Request $request, $id)
     {
+        /* Encuentra la medición a realizar */
         $mi = $this->getRepository()->find($id);
 
-        /* cambiar por path real (URL) http://tudominio/cargar_bytes.php)*/ 
         $fileurl = $mi->getPaquete()->getWebPath();
-        if(strpos($fileurl,'://')){
-            $fileurl = $mi->getPaquete()->getWebPath();
-        }else{
-            $fileurl = 'http://'.$request->getHttpHost().$request->getBasePath().'/'.$fileurl;
-        }
-        $info = $this->curlGetFile($fileurl); 
-        $mi->setLengthDownload($info['download_content_length']);
-        $mi->setLengthUpload($info['upload_content_length']);
-        $mi->setSizeDownload($info['size_download']);
-        $mi->setSizeUpload($info['size_upload']);
-        $mi->setTimeConnect($info['connect_time']);
-        $mi->setTimeNameLookup($info['namelookup_time']);
-        $mi->setTimePreTransfer($info['pretransfer_time']);
-        $mi->setTimeRedirect($info['redirect_time']);
-        $mi->setTimeStartTransfer($info['starttransfer_time']);
-        $mi->setTimeTotal($info['total_time']+$info['starttransfer_time']+$info['redirect_time']+$info['pretransfer_time']+$info['namelookup_time']+$info['connect_time']);
-        $mi->setSpeedDownload($info['download_content_length']/$mi->getTimeTotal());
-        $mi->setSpeedUpload($info['upload_content_length']/$mi->getTimeTotal());
+            if(strpos($fileurl,'://')){
+                /* El path es real */
+                /* Mida tiempo de ping */
+                $fileurl = $mi->getPaquete()->getWebPath();
+                $info = $this->curlGetFile($fileurl);
+                $mi->setLengthDownload(0);
+                $mi->setLengthUpload(0);
+                $mi->setSizeDownload(0);
+                $mi->setSizeUpload(0);
+                $mi->setTimeConnect(0);
+                $mi->setTimeNameLookup(0);
+                $mi->setTimePreTransfer(0);
+                $mi->setTimeRedirect(0);
+                $mi->setTimeStartTransfer(0);
+                $mi->setTimeTotal($info['total_time']);
+                $mi->setSpeedDownload(0);
+                $mi->setSpeedUpload(0);
+            }else{
+                /* Cambia por path real (URL->http://dominio/cargar_bytes.php) */
+                /* Mida velocidad */
+                $fileurl = 'http://'.$request->getHttpHost().$request->getBasePath().'/'.$fileurl;
+                $info = $this->curlGetFile($fileurl);
+                $mi->setLengthDownload($info['download_content_length']);
+                $mi->setLengthUpload($info['upload_content_length']);
+                $mi->setSizeDownload($info['size_download']);
+                $mi->setSizeUpload($info['size_upload']);
+                $mi->setTimeConnect($info['connect_time']);
+                $mi->setTimeNameLookup($info['namelookup_time']);
+                $mi->setTimePreTransfer($info['pretransfer_time']);
+                $mi->setTimeRedirect($info['redirect_time']);
+                $mi->setTimeStartTransfer($info['starttransfer_time']);
+                $mi->setTimeTotal($info['total_time']+$info['starttransfer_time']+$info['redirect_time']+$info['pretransfer_time']+$info['namelookup_time']+$info['connect_time']);
+                $mi->setSpeedDownload($info['download_content_length']/$mi->getTimeTotal());
+                $mi->setSpeedUpload($info['upload_content_length']/$mi->getTimeTotal());
+            }
         $em = $this->getDoctrine()->getManager();
         $em->persist($mi);
         $em->flush();
@@ -321,7 +367,7 @@ class MedicionInstitucionController extends Controller
         $deleteForm = $this->createDeleteForm($id);
         $data = array(
             'entity'      => $entity,
-//            'delete_form' => $deleteForm->createView(),
+            'delete_form' => $deleteForm->createView(),
         );
         if($request->isXmlHttpRequest()){
             return \Symfony\Component\HttpFoundation\JsonResponse::create(array(
@@ -418,6 +464,7 @@ class MedicionInstitucionController extends Controller
      */
     public function deleteAction(Request $request, $id)
     {
+        $entity = new MedicionInstitucion();
         $form = $this->createDeleteForm($id);
         $form->handleRequest($request);
 
@@ -433,6 +480,13 @@ class MedicionInstitucionController extends Controller
             $em->flush();
         }
 
+        if($request->isXmlHttpRequest()){
+            return \Symfony\Component\HttpFoundation\JsonResponse::create(array(
+                'title' => 'Medición Eliminada',
+                'body' => 'La '.$entity->getNombre().' en la fecha (año-mes-dia) '.$entity->getFechaCreado('Y-m-d').' fué eliminada exitosamente.',
+            ));
+        }
+        
         return $this->redirect($this->generateUrl('medicioninstitucion'));
     }
 
@@ -448,7 +502,12 @@ class MedicionInstitucionController extends Controller
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('medicioninstitucion_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => 'Borrar'))
+            ->add('submit', 'submit', array(
+                'label' => 'Borrar', 
+                'attr' => array(
+                        'class' => 'btn btn-warning'
+                    )
+            ))
             ->getForm()
         ;
     }

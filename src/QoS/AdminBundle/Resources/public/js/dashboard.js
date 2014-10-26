@@ -318,7 +318,6 @@ function sendFileAjax(url, data, urlFile){
     }).then(function(data1, textStatus, jqXHR){
         numPaq--;
         console.log(data1)
-
         modal.find('#modal-body>ol').append('<li><div class="col-xs-4">'+data1.timeTotal+' segundos</div><div class="col-xs-4">'+humanize(data1.sizeUpload)+' subidos</div><div class="col-xs-4">'+humanize(data1.lengthDownload)+' descargados</div></li>')
         
         if(numPaq > 0 || infinito){

@@ -310,7 +310,10 @@ class Paquete extends Objeto
         return json_encode($array);
     }
     
-    function ping($host, $timeout = 1) {
+    function ping($host = null, $timeout = 1) {
+        if(is_null($host)){
+            $host = $this->getPath();
+        }
         /* ICMP ping de paquete con un checksum pre-calculado */
         // Crea el paquete
         $type       = "\x08";
