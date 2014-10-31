@@ -484,8 +484,10 @@ class MedicionProveedor
     public function getSpeedDownload($humanize = false)
     {
         $var = $this->speedDownload;
-        if($humanize){
+        if(is_bool($humanize) && $humanize){
             $var = $this->humanize($var, true);
+        }else{
+            $var = $this->getProveedor()->convertir($var, 'byte', $humanize);
         }
         return $var;
     }

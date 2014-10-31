@@ -102,9 +102,67 @@ class Proveedor extends Objeto
      *
      * @return float 
      */
-    public function getHolgura()
+    public function getHolgura($convertir = false, $unidad = 'mb')
     {
-        return $this->holgura;
+        $h = $this->holgura;
+        if($convertir){
+            return $this->convertir($h, $this->getUnidadHolgura(), $unidad);
+        }
+        return $h;
+    }
+    
+    public function convertir($valor, $unidad_, $unidad){
+        $multiplicador = 1;
+        switch(strtolower($unidad_)){
+            case 'gb':
+                if($unidad === 'gb'){
+                    break;
+                }
+                $multiplicador *= 1024;
+                if($unidad === 'mb'){
+                    break;
+                }
+            case 'mb':
+                if($unidad === 'gb'){
+                    $multiplicador = 1/(pow(1024, 2));
+                    break;
+                }
+                if($unidad === 'mb'){
+                    break;
+                }
+                $multiplicador *= 1024;
+                if($unidad === 'kb'){
+                    break;
+                }
+            case 'kb':
+                if($unidad === 'gb'){
+                    $multiplicador = 1/(pow(1024, 3));
+                    break;
+                }
+                if($unidad === 'mb'){
+                    $multiplicador = 1/(pow(1024, 2));
+                    break;
+                }
+                if($unidad === 'kb'){
+                    break;
+                }
+                $multiplicador *= 1024;
+            case 'byte':
+                if($unidad === 'gb'){
+                    $multiplicador = 1/(pow(1024, 3));
+                    break;
+                }
+                if($unidad === 'mb'){
+                    $multiplicador = 1/(pow(1024, 2));
+                    break;
+                }
+                if($unidad === 'kb'){
+                    $multiplicador = 1/(1024);
+                    break;
+                }
+                $multiplicador *= 1024;
+        }
+        return $valor*$multiplicador;
     }
 
     /**
@@ -354,11 +412,25 @@ class Proveedor extends Objeto
             $promedio = 0;
             $count = 1;
         }
+        $div = $promedio/$count;
         if($humanize){
-            return $medicion->humanize($promedio/$count).'/seg';
+            if(is_bool($humanize)){
+                return $medicion->humanize($div).'/seg';
+            }elseif(is_string($humanize)){
+                $promedio_ = $promedio;
+                switch(strtolower($humanize)){
+                    case 'gb':
+                        $promedio_ /= 1024;
+                    case 'mb':
+                        $promedio_ /= 1024;
+                    case 'kb':
+                        $promedio_ /= 1024;
+                }
+                $div = $promedio_/$count;
+            }
         }
 //        return $medicion->humanize($promedio/$count,false);//byte/seg
-        return $promedio/$count;//byte/seg
+        return $div;//byte/seg
     }
     
     public function __toString() {

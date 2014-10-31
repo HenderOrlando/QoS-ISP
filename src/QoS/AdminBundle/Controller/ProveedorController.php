@@ -444,10 +444,11 @@ class ProveedorController extends Controller
                     $label = 'default';
                     $medActual = $proveedor->getMedicionActual();
                     if($medActual){
-                        if($medicionInstitucion->getSpeedDownload() < ($medActual->getSpeedDownload()-$proveedor->getHolgura()))
+                        if($medicionInstitucion->getSpeedDownload('mb') < ($medActual->getSpeedDownload('mb')-$proveedor->getHolgura(true,'mb')))
                         $label = 'warning';
                     }
-                    $medicionesInstitucion .= "<a class=\"open-modal label label-$label\" href=\"$url\">$nombre ($fecha)</a> ";
+                    $valores = '</br>'.$medicionInstitucion->getSpeedDownload('mb').' - '.$proveedor->getHolgura(true,'mb');
+                    $medicionesInstitucion .= "<a class=\"open-modal label label-$label\" valores=\"$valores\" href=\"$url\">$nombre ($fecha)</a> ";
                 }
                 $numMP = $proveedor->getMedicionesProveedor()->count();
                 $pluralMP = $numMP == 1?'ón':'ones';
@@ -468,7 +469,7 @@ class ProveedorController extends Controller
                         'val' => $medicionesInstitucion
                     ),
                     array(
-                        'val' => $proveedor->getPromedioTotal().' '.($proveedor->getMedicionActual()?($proveedor->getPromedioTotal() < $proveedor->getMedicionActual()->getSpeedDownload()-$proveedor->getHolgura()?'<span class="label label-danger">Fallida</span>':'<span class="label label-success">Satisfactoria</span>'):'')
+                        'val' => $proveedor->getPromedioTotal().' '.($proveedor->getMedicionActual()?($proveedor->getPromedioTotal(null, 'mb') < $proveedor->getMedicionActual()->getSpeedDownload('mb')-$proveedor->getHolgura(true,'mb')?'<span class="label label-danger">Fallida</span>':'<span class="label label-success">Satisfactoria</span>'):'')
                     ),
                     array(
                         'val' => $proveedor->getTimePromedioTotal().' seg'
