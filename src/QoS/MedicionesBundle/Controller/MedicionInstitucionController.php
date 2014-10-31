@@ -227,6 +227,8 @@ class MedicionInstitucionController extends Controller
                 /* Mida velocidad */
                 $fileurl = 'http://'.$request->getHttpHost().$request->getBasePath().'/'.$fileurl;
                 $info = $this->curlGetFile($fileurl);
+                $info['download_content_length'] = $info['download_content_length'] > 0?$info['download_content_length']:0;
+                $info['upload_content_length'] = $info['upload_content_length'] > 0?$info['upload_content_length']:0;
                 $mi->setLengthDownload($info['download_content_length']);
                 $mi->setLengthUpload($info['upload_content_length']);
                 $mi->setSizeDownload($info['size_download']);
@@ -237,8 +239,8 @@ class MedicionInstitucionController extends Controller
                 $mi->setTimeRedirect($info['redirect_time']);
                 $mi->setTimeStartTransfer($info['starttransfer_time']);
                 $mi->setTimeTotal($info['total_time']/*+$info['starttransfer_time']+$info['redirect_time']+$info['pretransfer_time']+$info['namelookup_time']+$info['connect_time']*/);
-                $mi->setSpeedDownload($info['speed_download']/*$info['download_content_length']/$mi->getTimeTotal()*/);
-                $mi->setSpeedUpload($info['speed_upload']/*$info['upload_content_length']/$mi->getTimeTotal()*/);
+                $mi->setSpeedDownload($info['download_content_length']/$mi->getTimeTotal());
+                $mi->setSpeedUpload($info['upload_content_length']/$mi->getTimeTotal());
             }
         $em = $this->getDoctrine()->getManager();
         $em->persist($mi);
