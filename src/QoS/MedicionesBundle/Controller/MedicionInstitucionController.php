@@ -236,9 +236,9 @@ class MedicionInstitucionController extends Controller
                 $mi->setTimePreTransfer($info['pretransfer_time']);
                 $mi->setTimeRedirect($info['redirect_time']);
                 $mi->setTimeStartTransfer($info['starttransfer_time']);
-                $mi->setTimeTotal($info['total_time']+$info['starttransfer_time']+$info['redirect_time']+$info['pretransfer_time']+$info['namelookup_time']+$info['connect_time']);
-                $mi->setSpeedDownload($info['download_content_length']/$mi->getTimeTotal());
-                $mi->setSpeedUpload($info['upload_content_length']/$mi->getTimeTotal());
+                $mi->setTimeTotal($info['total_time']/*+$info['starttransfer_time']+$info['redirect_time']+$info['pretransfer_time']+$info['namelookup_time']+$info['connect_time']*/);
+                $mi->setSpeedDownload($info['speed_download']/*$info['download_content_length']/$mi->getTimeTotal()*/);
+                $mi->setSpeedUpload($info['speed_upload']/*$info['upload_content_length']/$mi->getTimeTotal()*/);
             }
         $em = $this->getDoctrine()->getManager();
         $em->persist($mi);
