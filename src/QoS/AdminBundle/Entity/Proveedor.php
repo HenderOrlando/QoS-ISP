@@ -118,7 +118,7 @@ class Proveedor extends Objeto
                 if($unidad === 'gb'){
                     break;
                 }
-                $multiplicador *= 1024;
+//                $multiplicador *= 1024;
                 if($unidad === 'mb'){
                     break;
                 }
@@ -130,7 +130,7 @@ class Proveedor extends Objeto
                 if($unidad === 'mb'){
                     break;
                 }
-                $multiplicador *= 1024;
+//                $multiplicador *= 1024;
                 if($unidad === 'kb'){
                     break;
                 }
@@ -146,7 +146,7 @@ class Proveedor extends Objeto
                 if($unidad === 'kb'){
                     break;
                 }
-                $multiplicador *= 1024;
+//                $multiplicador *= 1024;
             case 'byte':
                 if($unidad === 'gb'){
                     $multiplicador = 1/(pow(1024, 3));
@@ -160,7 +160,7 @@ class Proveedor extends Objeto
                     $multiplicador = 1/(1024);
                     break;
                 }
-                $multiplicador *= 1024;
+//                $multiplicador *= 1024;
         }
         return $valor*$multiplicador;
     }

@@ -238,9 +238,9 @@ class MedicionInstitucionController extends Controller
                 $mi->setTimePreTransfer($info['pretransfer_time']);
                 $mi->setTimeRedirect($info['redirect_time']);
                 $mi->setTimeStartTransfer($info['starttransfer_time']);
-                $mi->setTimeTotal($info['total_time']/*+$info['starttransfer_time']+$info['redirect_time']+$info['pretransfer_time']+$info['namelookup_time']+$info['connect_time']*/);
-                $mi->setSpeedDownload($info['download_content_length']/$mi->getTimeTotal());
-                $mi->setSpeedUpload($info['upload_content_length']/$mi->getTimeTotal());
+                $mi->setTimeTotal($info['total_time']+$info['starttransfer_time']+$info['redirect_time']+$info['pretransfer_time']+$info['namelookup_time']+$info['connect_time']);
+                $mi->setSpeedDownload($info['download_content_length']/8/$mi->getTimeTotal());
+                $mi->setSpeedUpload($info['upload_content_length']/8/$mi->getTimeTotal());
             }
         $em = $this->getDoctrine()->getManager();
         $em->persist($mi);
@@ -258,8 +258,12 @@ class MedicionInstitucionController extends Controller
         // Issue a HEAD request and follow any redirects.
         curl_setopt( $curl, CURLOPT_NOBODY, true );
         curl_setopt( $curl, CURLOPT_HEADER, true );
-        curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true );
-        curl_setopt( $curl, CURLOPT_FOLLOWLOCATION, true );
+        curl_setopt( $curl, CURLOPT_RETURNTRANSFER, 1 );
+        curl_setopt( $curl, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt( $curl, CURLOPT_TIMEOUT, 55);
+        
+        set_time_limit(60);
+        //curl_setopt( $curl, CURLOPT_FOLLOWLOCATION, true );
 //        curl_setopt( $curl, CURLOPT_USERAGENT, get_user_agent_string() );
 
         $data = curl_exec( $curl );
