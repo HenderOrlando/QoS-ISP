@@ -384,22 +384,29 @@ class UsuarioController extends Controller
         if(is_null($datos)){
             $datos = array();
         }
+        $countAll = $em->getRepository('QoSAdminBundle:Usuario')
+                ->createQueryBuilder('u')
+                ->select('COUNT(u.id)')
+                ->getQuery()
+                ->getSingleScalarResult();
         if(is_null($usuario)){
             $datos['roles-usuarios'] = array();
             foreach($roles as $rol){
                 $datos['roles-usuarios']['name'] = 'roles-usuarios';
+                $count = $rol->getUsuario()->count();
                 $datos['roles-usuarios']['values'][] = array(
-                    'label' => "Rol ".$rol->getNombre(),
-                    'value' => $rol->getUsuario()->count(),
+                    'label' => "Rol ".$rol->getNombre().' ('.(round(($count/$countAll)*100,2)).'%)',
+                    'value' => $count,
                 );
 
             }
         }else{
             $datos['mediciones-'.$usuario->getUsernamecanonical()] = array();
             $datos['mediciones-'.$usuario->getUsernamecanonical()]['name'] = 'mediciones-'.$usuario->getUsernamecanonical();
+            $count = $usuario->getMedicionesInstitucion()->count();
             $datos['mediciones-'.$usuario->getUsernamecanonical()]['values'][] = array(
                 'label' => $usuario->getEmail(),
-                'value' => $usuario->getMedicionesInstitucion()->count(),
+                'value' => $count,
             );
         }
         return $datos;

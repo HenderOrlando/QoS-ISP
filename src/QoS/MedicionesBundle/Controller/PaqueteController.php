@@ -333,22 +333,29 @@ class PaqueteController extends Controller
         if(is_null($datos)){
             $datos = array();
         }
+        $countAll = $em->getRepository('QoSMedicionesBundle:MedicionInstitucion')
+                ->createQueryBuilder('mi')
+                ->select('COUNT(mi.id)')
+                ->getQuery()
+                ->getSingleScalarResult();
         if(is_null($paquete)){
             $datos['Uso-paquetes'] = array();
             $paquetes = $this->getRepository()->findAll();
             foreach($paquetes as $paquete){
                 $datos['Uso-paquetes']['name'] = 'Uso-paquetes';
+                $count = $paquete->getConfiguracion()->count();
                 $datos['Uso-paquetes']['values'][] = array(
-                    'label' => $paquete->getNombre(),
-                    'value' => $paquete->getConfiguracion()->count(),
+                    'label' => $paquete->getNombre().' ('.(round(($count/$countAll)*100,2)).'%)',
+                    'value' => $count,
                 );
             }
         }else{
             $datos['Uso-'.$paquete->getCanonical()] = array();
             $datos['Uso-'.$paquete->getCanonical()]['name'] = 'Uso-'.$paquete->getCanonical();
+            $count = $paquete->getConfiguracion()->count();
             $datos['Uso-'.$paquete->getCanonical()]['values'][] = array(
-                'label' => $paquete->getNombre(),
-                'value' => $paquete->getConfiguracion()->count(),
+                'label' => $paquete->getNombre().' ('.(round(($count/$countAll)*100,2)).'%)',
+                'value' => $count,
             );
         }
         return $datos;

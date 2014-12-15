@@ -342,21 +342,28 @@ class InstitucionController extends Controller
         if(is_null($datos)){
             $datos = array();
         }
+        $countAll = $em->getRepository('QoSMedicionesBundle:MedicionInstitucion')
+                ->createQueryBuilder('mi')
+                ->select('COUNT(mi.id)')
+                ->getQuery()
+                ->getSingleScalarResult();
         if(is_null($institucion)){
             $datos['mediciones-instituciones'] = array();
             foreach($instituciones as $institucion){
                 $datos['mediciones-instituciones']['name'] = 'mediciones-instituciones';
+                $count = $institucion->getMediciones()->count();
                 $datos['mediciones-instituciones']['values'][] = array(
-                    'label' => $institucion->getNombre(),
-                    'value' => $institucion->getMediciones()->count(),
+                    'label' => $institucion->getNombre().' ('.(round(($count/$countAll)*100,2)).'%)',
+                    'value' => $count,
                 );
             }
         }else{
             $datos['mediciones-'.$institucion->getCanonical()] = array();
             $datos['mediciones-'.$institucion->getCanonical()]['name'] = 'mediciones-'.$institucion->getCanonical();
+            $count = $institucion->getMediciones()->count();
             $datos['mediciones-'.$institucion->getCanonical()]['values'][] = array(
-                'label' => $institucion->getNombre(),
-                'value' => $institucion->getMediciones()->count(),
+                'label' => $institucion->getNombre().' ('.(round(($count/$countAll)*100,2)).'%)',
+                'value' => $count,
             );
         }
         return $datos;

@@ -381,21 +381,28 @@ class ProveedorController extends Controller
         if(is_null($datos)){
             $datos = array();
         }
+        $countAll = $em->getRepository('QoSMedicionesBundle:MedicionInstitucion')
+                        ->createQueryBuilder('mi')
+                        ->select('COUNT(mi.id)')
+                        ->getQuery()
+                        ->getSingleScalarResult();
         if(is_null($proveedor)){
             $datos['mediciones-proveedores'] = array();
             foreach($proveedores as $proveedor){
                 $datos['mediciones-proveedores']['name'] = 'mediciones-proveedores';
+                $count = $proveedor->getMedicionesInstitucion()->count();
                 $datos['mediciones-proveedores']['values'][] = array(
-                    'label' => $proveedor->getNombre(),
-                    'value' => $proveedor->getMedicionesInstitucion()->count(),
+                    'label' => $proveedor->getNombre().' ('.(round(($count/$countAll)*100,2)).'%)',
+                    'value' => $count,
                 );
             }
         }else{
             $datos['mediciones-'.$proveedor->getCanonical()] = array();
             $datos['mediciones-'.$proveedor->getCanonical()]['name'] = 'mediciones-'.$proveedor->getCanonical();
+            $count = $proveedor->getMedicionesInstitucion()->count();
             $datos['mediciones-'.$proveedor->getCanonical()]['values'][] = array(
-                'label' => $proveedor->getNombre(),
-                'value' => $proveedor->getMedicionesInstitucion()->count(),
+                'label' => $proveedor->getNombre().' ('.(round(($count/$countAll)*100,2)).'%)',
+                'value' => $count,
             );
             
         }
